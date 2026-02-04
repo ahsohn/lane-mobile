@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Space Lane Shooter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h1>Space Lane Shooter</h1>
+            <p>Move side to side to dodge enemies</p>
+            <p>Auto-fire destroys enemies</p>
+            <p>Collect power-ups for upgrades!</p>
+            <button id="start-btn" class="game-btn">START GAME</button>
+            <div id="character-select">
+                <h3>Select Character</h3>
+                <div id="character-options"></div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>GAME OVER</h1>
+            <p>Score: <span id="final-score">0</span></p>
+            <p>High Score: <span id="high-score">0</span></p>
+            <button id="restart-btn" class="game-btn">PLAY AGAIN</button>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="screen hidden">
+            <h1>PAUSED</h1>
+            <button id="resume-btn" class="game-btn">RESUME</button>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="score-display">Score: <span id="score">0</span></div>
+            <div id="health-display">
+                <span id="health-hearts"></span>
+            </div>
+            <div id="weapon-display">
+                <span id="current-weapon">Basic</span>
+            </div>
+            <button id="pause-btn">II</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
