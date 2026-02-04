@@ -38,7 +38,7 @@ const CHARACTERS = [
     { id: 'star', emoji: '⭐', name: 'Star Lord', color: '#ffff00', unlocked: false, scoreRequired: 10000 }
 ];
 
-// Weapon definitions
+// Weapon definitions (with ammo counts for special weapons)
 const WEAPONS = {
     basic: {
         name: 'Basic',
@@ -46,7 +46,8 @@ const WEAPONS = {
         bulletCount: 1,
         spread: 0,
         bulletColor: '#00ffff',
-        damage: 1
+        damage: 1,
+        ammo: Infinity // Basic weapon has unlimited ammo
     },
     double: {
         name: 'Double Shot',
@@ -54,7 +55,8 @@ const WEAPONS = {
         bulletCount: 2,
         spread: 15,
         bulletColor: '#ffff00',
-        damage: 1
+        damage: 1,
+        ammo: 30 // 30 shots
     },
     triple: {
         name: 'Triple Shot',
@@ -62,7 +64,8 @@ const WEAPONS = {
         bulletCount: 3,
         spread: 20,
         bulletColor: '#ff00ff',
-        damage: 1
+        damage: 1,
+        ammo: 25 // 25 shots
     },
     rapid: {
         name: 'Rapid Fire',
@@ -70,7 +73,8 @@ const WEAPONS = {
         bulletCount: 1,
         spread: 5,
         bulletColor: '#ff6600',
-        damage: 1
+        damage: 1,
+        ammo: 50 // 50 shots
     },
     laser: {
         name: 'Laser Beam',
@@ -79,7 +83,8 @@ const WEAPONS = {
         spread: 0,
         bulletColor: '#ff0000',
         damage: 0.5,
-        isLaser: true
+        isLaser: true,
+        ammo: 100 // 100 shots (fires fast so needs more)
     },
     spread: {
         name: 'Spread Shot',
@@ -87,7 +92,8 @@ const WEAPONS = {
         bulletCount: 5,
         spread: 40,
         bulletColor: '#00ff00',
-        damage: 1
+        damage: 1,
+        ammo: 20 // 20 shots
     }
 };
 
@@ -95,6 +101,7 @@ const WEAPONS = {
 const POWERUP_TYPES = [
     { type: 'weapon', weapons: ['double', 'triple', 'rapid', 'laser', 'spread'], emoji: '🔫', color: '#ffff00' },
     { type: 'health', emoji: '❤️', color: '#ff0000' },
+    { type: 'maxhealth', emoji: '💖', color: '#ff69b4' }, // Increases max health permanently
     { type: 'shield', emoji: '🛡️', color: '#00ffff' },
     { type: 'score', emoji: '💎', color: '#ff00ff', points: 500 },
     { type: 'bomb', emoji: '💥', color: '#ff6600' }
@@ -106,8 +113,11 @@ const ENEMY_TYPES = [
     { id: 'fast', emoji: '🦇', health: 1, speed: 2, points: 15, size: 30 },
     { id: 'tank', emoji: '🤖', health: 3, speed: 0.5, points: 30, size: 45 },
     { id: 'zigzag', emoji: '🦑', health: 2, speed: 1, points: 25, size: 35, pattern: 'zigzag' },
-    { id: 'boss', emoji: '👹', health: 10, speed: 0.3, points: 100, size: 60, isBoss: true }
+    { id: 'boss', emoji: '👹', health: 20, speed: 0.25, points: 500, size: 80, isBoss: true, pattern: 'boss' }
 ];
+
+// Boss spawn thresholds (score milestones)
+const BOSS_SPAWN_SCORES = [500, 1500, 3000, 5000, 8000, 12000, 17000, 23000, 30000];
 
 // ============================================
 // AUDIO SYSTEM (Web Audio API)
@@ -176,6 +186,26 @@ class AudioSystem {
         this.playTone(400, 0.3, 'sawtooth', 0.15);
         setTimeout(() => this.playTone(300, 0.3, 'sawtooth', 0.12), 300);
         setTimeout(() => this.playTone(200, 0.5, 'sawtooth', 0.1), 600);
+    }
+
+    jumpScare() {
+        // Loud, startling sound for bomb explosion
+        this.playTone(150, 0.5, 'sawtooth', 0.4);
+        this.playTone(100, 0.5, 'square', 0.3);
+        setTimeout(() => {
+            this.playTone(80, 0.3, 'sawtooth', 0.35);
+            this.playTone(200, 0.2, 'square', 0.3);
+        }, 100);
+        setTimeout(() => {
+            this.playTone(60, 0.4, 'sawtooth', 0.3);
+        }, 200);
+    }
+
+    bossWarning() {
+        // Ominous warning sound when boss appears
+        this.playTone(100, 0.5, 'sine', 0.2);
+        setTimeout(() => this.playTone(90, 0.5, 'sine', 0.2), 500);
+        setTimeout(() => this.playTone(80, 0.8, 'sine', 0.25), 1000);
     }
 }
 
@@ -310,12 +340,18 @@ class Player {
         this.health = CONFIG.PLAYER_INITIAL_HEALTH;
         this.maxHealth = CONFIG.PLAYER_INITIAL_HEALTH;
         this.weapon = 'basic';
+        this.ammo = Infinity; // Current ammo for weapon
         this.lastShot = 0;
         this.shieldActive = false;
         this.shieldTimer = 0;
         this.invincible = false;
         this.invincibleTimer = 0;
         this.targetX = this.x;
+    }
+
+    setWeapon(weaponName) {
+        this.weapon = weaponName;
+        this.ammo = WEAPONS[weaponName].ammo;
     }
 
     setCharacter(character) {
@@ -356,6 +392,18 @@ class Player {
 
         if (now - this.lastShot < weapon.fireRate) return;
         this.lastShot = now;
+
+        // Check ammo for special weapons
+        if (this.weapon !== 'basic') {
+            if (this.ammo <= 0) {
+                // Out of ammo, revert to basic weapon
+                this.weapon = 'basic';
+                this.ammo = Infinity;
+                this.game.showNotification('Out of ammo!');
+                return;
+            }
+            this.ammo--;
+        }
 
         this.game.audio.shoot();
 
@@ -507,12 +555,24 @@ class Enemy {
             case 'zigzag':
                 this.x = this.startX + Math.sin(this.time * 0.003) * 50;
                 break;
+            case 'boss':
+                // Boss moves slowly side to side across the screen
+                const centerX = this.game.canvas.width / 2;
+                const amplitude = this.game.canvas.width / 3;
+                this.x = centerX + Math.sin(this.time * 0.001) * amplitude;
+                // Boss stops at a certain Y position and doesn't go off screen
+                if (this.y < 120) {
+                    this.y += this.speed;
+                }
+                break;
             case 'straight':
             default:
                 break;
         }
 
-        this.y += this.speed;
+        if (this.pattern !== 'boss') {
+            this.y += this.speed;
+        }
     }
 
     takeDamage(damage) {
@@ -601,14 +661,22 @@ class PowerUp {
 
         switch (this.typeData.type) {
             case 'weapon':
-                player.weapon = this.weapon;
-                this.game.showNotification(`${WEAPONS[this.weapon].name}!`);
+                player.setWeapon(this.weapon);
+                const ammoCount = WEAPONS[this.weapon].ammo;
+                this.game.showNotification(`${WEAPONS[this.weapon].name}! (${ammoCount} shots)`);
                 break;
             case 'health':
                 if (player.health < player.maxHealth) {
                     player.health++;
+                    this.game.showNotification('Health +1!');
+                } else {
+                    this.game.showNotification('Health Full!');
                 }
-                this.game.showNotification('Health +1!');
+                break;
+            case 'maxhealth':
+                player.maxHealth++;
+                player.health++; // Also restore one health
+                this.game.showNotification(`Max Health Up! (${player.maxHealth} hearts)`);
                 break;
             case 'shield':
                 player.activateShield(5000);
@@ -619,8 +687,8 @@ class PowerUp {
                 this.game.showNotification(`+${this.typeData.points} Points!`);
                 break;
             case 'bomb':
+                this.game.triggerBombJumpScare();
                 this.game.clearAllEnemies();
-                this.game.showNotification('BOMB!');
                 break;
         }
     }
@@ -656,6 +724,10 @@ class Game {
 
         this.touchStartX = 0;
         this.playerStartX = 0;
+
+        // Boss tracking
+        this.nextBossIndex = 0; // Index into BOSS_SPAWN_SCORES
+        this.bossActive = false; // Whether a boss is currently on screen
 
         this.init();
     }
@@ -825,6 +897,10 @@ class Game {
         this.lastPowerupSpawn = Date.now();
         this.lastDifficultyIncrease = Date.now();
 
+        // Reset boss tracking
+        this.nextBossIndex = 0;
+        this.bossActive = false;
+
         this.player = new Player(this);
         this.player.setCharacter(this.selectedCharacter);
 
@@ -869,24 +945,58 @@ class Game {
     }
 
     spawnEnemy() {
+        // Check if we should spawn a boss
+        if (this.nextBossIndex < BOSS_SPAWN_SCORES.length &&
+            this.score >= BOSS_SPAWN_SCORES[this.nextBossIndex] &&
+            !this.bossActive) {
+            this.spawnBoss();
+            return;
+        }
+
+        // Don't spawn regular enemies while boss is active (except reduced rate)
+        if (this.bossActive && Math.random() > 0.3) return;
+
         const now = Date.now();
         const spawnRate = CONFIG.ENEMY_SPAWN_RATE / (1 + this.difficulty * 0.15);
 
         if (now - this.lastEnemySpawn < spawnRate) return;
         this.lastEnemySpawn = now;
 
-        // Select enemy type based on difficulty
+        // Select enemy type based on difficulty (excluding boss - index 4)
         let availableTypes = [ENEMY_TYPES[0]]; // Basic always available
 
         if (this.difficulty >= 1) availableTypes.push(ENEMY_TYPES[1]); // Fast
         if (this.difficulty >= 2) availableTypes.push(ENEMY_TYPES[2]); // Tank
         if (this.difficulty >= 3) availableTypes.push(ENEMY_TYPES[3]); // Zigzag
-        if (this.difficulty >= 5 && Math.random() < 0.1) availableTypes.push(ENEMY_TYPES[4]); // Boss (rare)
 
         const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
         const x = Math.random() * (this.canvas.width - type.size * 2) + type.size;
 
         this.enemies.push(new Enemy(this, type, x));
+    }
+
+    spawnBoss() {
+        this.bossActive = true;
+        this.nextBossIndex++;
+
+        // Warning effect
+        this.audio.bossWarning();
+        this.showNotification('WARNING: BOSS INCOMING!');
+
+        // Spawn boss after a short delay
+        setTimeout(() => {
+            const bossType = ENEMY_TYPES[4]; // Boss type
+            // Scale boss health based on how many bosses have been defeated
+            const scaledBossType = {
+                ...bossType,
+                health: bossType.health + (this.nextBossIndex - 1) * 10, // Each boss has 10 more HP
+                points: bossType.points + (this.nextBossIndex - 1) * 200 // More points too
+            };
+            const x = this.canvas.width / 2;
+            const boss = new Enemy(this, scaledBossType, x);
+            boss.isBoss = true;
+            this.enemies.push(boss);
+        }, 1500);
     }
 
     spawnPowerup() {
@@ -919,6 +1029,47 @@ class Game {
             this.audio.explosion();
         });
         this.enemies = [];
+    }
+
+    triggerBombJumpScare() {
+        // Play the jump scare sound
+        this.audio.jumpScare();
+
+        // Create the jump scare visual overlay
+        const jumpScareDiv = document.createElement('div');
+        jumpScareDiv.className = 'jumpscare-overlay';
+        jumpScareDiv.innerHTML = `
+            <div class="jumpscare-face">💀</div>
+            <div class="jumpscare-text">BOOM!</div>
+        `;
+        document.getElementById('game-container').appendChild(jumpScareDiv);
+
+        // Screen shake effect
+        this.canvas.style.animation = 'screenShake 0.3s ease-in-out';
+
+        // Flash the screen
+        const flashDiv = document.createElement('div');
+        flashDiv.className = 'screen-flash';
+        document.getElementById('game-container').appendChild(flashDiv);
+
+        // Remove effects after animation
+        setTimeout(() => {
+            jumpScareDiv.remove();
+            flashDiv.remove();
+            this.canvas.style.animation = '';
+            this.showNotification('BOMB!');
+        }, 400);
+
+        // Massive particle explosion
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                const x = Math.random() * this.canvas.width;
+                const y = Math.random() * this.canvas.height * 0.7;
+                this.particles.emit(x, y, '#ff6600', 30);
+                this.particles.emit(x, y, '#ffff00', 20);
+                this.particles.emit(x, y, '#ff0000', 15);
+            }, i * 50);
+        }
     }
 
     showNotification(text) {
@@ -955,6 +1106,21 @@ class Game {
                         this.score += enemy.points;
                         this.particles.emit(enemy.x, enemy.y, '#ff6600', 20);
                         this.audio.explosion();
+
+                        // Check if this was a boss
+                        if (enemy.isBoss || enemy.type.isBoss) {
+                            this.bossActive = false;
+                            this.showNotification('BOSS DEFEATED! +' + enemy.points + ' pts');
+                            // Extra celebration particles
+                            for (let k = 0; k < 5; k++) {
+                                setTimeout(() => {
+                                    this.particles.emit(enemy.x + (Math.random() - 0.5) * 100,
+                                                       enemy.y + (Math.random() - 0.5) * 100,
+                                                       '#ffff00', 25);
+                                }, k * 100);
+                            }
+                        }
+
                         this.enemies.splice(j, 1);
                     }
 
@@ -1020,8 +1186,13 @@ class Game {
         }
         document.getElementById('health-hearts').textContent = hearts;
 
-        // Weapon display
-        document.getElementById('current-weapon').textContent = WEAPONS[this.player.weapon].name;
+        // Weapon display with ammo count
+        const weaponName = WEAPONS[this.player.weapon].name;
+        if (this.player.weapon === 'basic') {
+            document.getElementById('current-weapon').textContent = weaponName;
+        } else {
+            document.getElementById('current-weapon').textContent = `${weaponName} [${this.player.ammo}]`;
+        }
     }
 
     update(deltaTime) {
