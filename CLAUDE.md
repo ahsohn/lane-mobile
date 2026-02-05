@@ -25,6 +25,9 @@ lane-mobile/
 ├── flappy.html     # Flappy Sandal game
 ├── flappy.css
 ├── flappy.js
+├── bike.html       # Road Rider CB650 game
+├── bike.css
+├── bike.js
 └── CLAUDE.md       # This file
 ```
 
@@ -40,6 +43,13 @@ lane-mobile/
 - Player: Mars' winged sandal
 - Obstacles: Corinthian pillars
 - High scores saved to localStorage (`flappySandalHighScore`)
+
+### Road Rider CB650
+- Side-scrolling motorcycle racing game
+- Player: Honda CB650 classic motorcycle
+- Tap to jump over obstacles (rocks, gaps, platforms, ramps)
+- Desert setting with parallax mountains
+- High scores saved to localStorage (`roadRiderHighScore`)
 
 ## Deployment
 

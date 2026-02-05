@@ -175,6 +175,28 @@
             box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
         }
 
+        /* Bike card theme */
+        .game-card.bike {
+            border-color: rgba(196, 30, 58, 0.3);
+        }
+
+        .game-card.bike:hover {
+            border-color: #C41E3A;
+            box-shadow: 0 20px 40px rgba(196, 30, 58, 0.2);
+        }
+
+        .game-card.bike .play-btn {
+            background: linear-gradient(135deg, #C41E3A, #8B0000);
+        }
+
+        .game-card.bike:hover .play-btn {
+            box-shadow: 0 5px 20px rgba(196, 30, 58, 0.4);
+        }
+
+        .game-card:nth-child(3) .game-icon {
+            animation-delay: 1s;
+        }
+
         /* Coming soon card */
         .game-card.coming-soon {
             opacity: 0.5;
@@ -276,11 +298,18 @@
                 <p>Guide Mars' winged sandal through ancient Corinthian pillars in this mythological flappy adventure!</p>
                 <span class="play-btn">Play Now</span>
             </a>
+
+            <a href="bike.html" class="game-card bike">
+                <span class="game-icon">🏍️</span>
+                <h2>Road Rider CB650</h2>
+                <p>Race through the desert on a classic Honda CB650! Jump over obstacles and see how far you can ride!</p>
+                <span class="play-btn">Play Now</span>
+            </a>
         </div>
 
         <footer>
             <p>Tap a game to play. Works best on mobile devices.</p>
-            <p class="version">v1.1.3</p>
+            <p class="version">v1.2.0</p>
         </footer>
     </div>
 

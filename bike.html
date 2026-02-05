@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Road Rider CB650</title>
+    <link rel="stylesheet" href="bike.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>Road Rider</h1>
+            <div class="bike-preview">CB650</div>
+            <p>Race through the desert on your Honda CB650</p>
+            <p class="hint">Tap to jump over obstacles!</p>
+            <button id="start-btn" class="game-btn">START RIDE</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>CRASH!</h1>
+            <p>Distance: <span id="final-score">0</span>m</p>
+            <p>Best: <span id="high-score">0</span>m</p>
+            <button id="restart-btn" class="game-btn">RIDE AGAIN</button>
+            <a href="index.html" class="back-link">← Back to Menu</a>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="distance-display">0m</div>
+            <div id="speed-display">60 km/h</div>
+        </div>
+    </div>
+
+    <script src="bike.js"></script>
+</body>
+</html>
