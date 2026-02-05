@@ -237,10 +237,15 @@ class Pillar {
         const bottomY = this.gapY + this.gapHeight / 2;
         const bottomHeight = this.game.canvas.height - CONFIG.GROUND_HEIGHT - bottomY;
 
-        // Draw top pillar (upside down)
-        this.drawCorinthianPillar(ctx, this.x, 0, this.width, topHeight, true);
+        // Simple debug rectangles (green pillars)
+        ctx.fillStyle = '#228B22';
+        // Top pillar
+        ctx.fillRect(this.x, 0, this.width, topHeight);
+        // Bottom pillar
+        ctx.fillRect(this.x, bottomY, this.width, bottomHeight);
 
-        // Draw bottom pillar
+        // Draw decorative pillar on top
+        this.drawCorinthianPillar(ctx, this.x, 0, this.width, topHeight, true);
         this.drawCorinthianPillar(ctx, this.x, bottomY, this.width, bottomHeight, false);
     }
 
