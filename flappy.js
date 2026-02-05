@@ -7,9 +7,9 @@ const CONFIG = {
     GRAVITY: 0.5,
     FLAP_STRENGTH: -9,
     PILLAR_SPEED: 3,
-    PILLAR_GAP: 180,
+    PILLAR_GAP: 200,           // Vertical gap to fly through (increased)
     PILLAR_WIDTH: 80,
-    PILLAR_SPAWN_DISTANCE: 300,
+    PILLAR_SPAWN_DISTANCE: 450, // Horizontal distance between pillars (increased)
     GROUND_HEIGHT: 80,
     SANDAL_SIZE: 45
 };
