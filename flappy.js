@@ -7,9 +7,9 @@ const CONFIG = {
     GRAVITY: 0.5,
     FLAP_STRENGTH: -9,
     PILLAR_SPEED: 3,
-    PILLAR_GAP: 200,           // Vertical gap to fly through (increased)
+    PILLAR_GAP: 200,           // Vertical gap to fly through
     PILLAR_WIDTH: 80,
-    PILLAR_SPAWN_DISTANCE: 450, // Horizontal distance between pillars (increased)
+    PILLAR_SPACING: 350,       // Horizontal space BETWEEN pillars (not including width)
     GROUND_HEIGHT: 80,
     SANDAL_SIZE: 45
 };
@@ -549,7 +549,9 @@ class Game {
         this.state = 'playing';
         this.score = 0;
         this.pillars = [];
-        this.lastPillarX = this.canvas.width;
+        // Start with lastPillarX positioned so first pillar spawns after a delay
+        // This gives the player time to get ready
+        this.lastPillarX = this.canvas.width - CONFIG.PILLAR_SPACING + 200;
 
         this.sandal = new Sandal(this);
 
@@ -592,13 +594,18 @@ class Game {
     }
 
     spawnPillars() {
-        if (this.lastPillarX < this.canvas.width - CONFIG.PILLAR_SPAWN_DISTANCE) {
-            return;
+        // Calculate where the next pillar should spawn
+        const spawnX = this.canvas.width + 50;
+
+        // Only spawn if the last pillar has moved far enough left
+        // (last pillar X + pillar width + spacing) should be less than spawn position
+        if (this.lastPillarX + CONFIG.PILLAR_WIDTH + CONFIG.PILLAR_SPACING > spawnX) {
+            return; // Wait for more space
         }
 
-        const pillar = new Pillar(this, this.canvas.width + CONFIG.PILLAR_WIDTH);
+        const pillar = new Pillar(this, spawnX);
         this.pillars.push(pillar);
-        this.lastPillarX = this.canvas.width + CONFIG.PILLAR_WIDTH;
+        this.lastPillarX = spawnX;
     }
 
     checkCollisions() {
