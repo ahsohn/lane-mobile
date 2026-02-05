@@ -480,8 +480,6 @@ class Game {
         this.pillars = [];
         this.clouds = [];
 
-        this.lastPillarX = 0;
-
         this.init();
     }
 
@@ -549,9 +547,6 @@ class Game {
         this.state = 'playing';
         this.score = 0;
         this.pillars = [];
-        // Set to 0 so first pillar spawns immediately off-screen
-        // Player still has time as pillar travels from right edge
-        this.lastPillarX = 0;
 
         this.sandal = new Sandal(this);
 
@@ -594,18 +589,25 @@ class Game {
     }
 
     spawnPillars() {
-        // Calculate where the next pillar should spawn
-        const spawnX = this.canvas.width + 50;
+        const spawnX = this.canvas.width + CONFIG.PILLAR_WIDTH;
 
-        // Only spawn if the last pillar has moved far enough left
-        // (last pillar X + pillar width + spacing) should be less than spawn position
-        if (this.lastPillarX + CONFIG.PILLAR_WIDTH + CONFIG.PILLAR_SPACING > spawnX) {
+        // Spawn first pillar immediately, then space subsequent ones
+        if (this.pillars.length === 0) {
+            const pillar = new Pillar(this, spawnX);
+            this.pillars.push(pillar);
+            return;
+        }
+
+        // Find the rightmost pillar
+        const rightmostX = Math.max(...this.pillars.map(p => p.x));
+
+        // Only spawn if there's enough space from the rightmost pillar
+        if (rightmostX > spawnX - CONFIG.PILLAR_SPACING - CONFIG.PILLAR_WIDTH) {
             return; // Wait for more space
         }
 
         const pillar = new Pillar(this, spawnX);
         this.pillars.push(pillar);
-        this.lastPillarX = spawnX;
     }
 
     checkCollisions() {
@@ -676,11 +678,6 @@ class Game {
 
         this.pillars.forEach(pillar => pillar.update());
         this.pillars = this.pillars.filter(pillar => !pillar.isOffscreen());
-
-        // Track last pillar X for spawning
-        if (this.pillars.length > 0) {
-            this.lastPillarX = Math.max(...this.pillars.map(p => p.x));
-        }
 
         // Check collisions
         if (this.checkCollisions()) {
