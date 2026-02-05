@@ -364,3 +364,34 @@ html, body {
         box-shadow: 0 0 30px #ff0000, 0 0 50px #ff6600;
     }
 }
+
+/* Back button */
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #aaa;
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 10px 15px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+.back-btn:hover, .back-btn:active {
+    color: #fff;
+    border-color: #00ffff;
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.back-link {
+    color: #aaa;
+    text-decoration: none;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+.back-link:hover {
+    color: #00ffff;
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Flappy Sandal</title>
+    <link rel="stylesheet" href="flappy.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>Flappy Sandal</h1>
+            <div class="sandal-preview">👟</div>
+            <p>Guide Mars' winged sandal through the ancient pillars</p>
+            <p class="hint">Tap or click to fly!</p>
+            <button id="start-btn" class="game-btn">START GAME</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>GAME OVER</h1>
+            <p>Score: <span id="final-score">0</span></p>
+            <p>Best: <span id="high-score">0</span></p>
+            <div id="medal-display"></div>
+            <button id="restart-btn" class="game-btn">TRY AGAIN</button>
+            <a href="index.html" class="back-link">← Back to Menu</a>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="score-display">0</div>
+        </div>
+    </div>
+
+    <script src="flappy.js"></script>
+</body>
+</html>

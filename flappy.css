@@ -1,0 +1,237 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #87CEEB;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    touch-action: none;
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Screens */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    z-index: 100;
+    padding: 20px;
+    text-align: center;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+.screen h1 {
+    font-size: 2.8rem;
+    margin-bottom: 20px;
+    color: #ffd700;
+    text-shadow: 3px 3px 0 #8B4513,
+                 -1px -1px 0 #8B4513,
+                 1px -1px 0 #8B4513,
+                 -1px 1px 0 #8B4513;
+    font-family: 'Georgia', serif;
+}
+
+.screen p {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: #ddd;
+}
+
+.screen .hint {
+    font-size: 0.9rem;
+    color: #aaa;
+    font-style: italic;
+}
+
+.sandal-preview {
+    font-size: 5rem;
+    margin: 20px 0;
+    animation: bob 1s ease-in-out infinite;
+}
+
+@keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(-10deg); }
+    50% { transform: translateY(-15px) rotate(10deg); }
+}
+
+.game-btn {
+    padding: 15px 50px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(to bottom, #ffd700, #ff8c00);
+    border: 4px solid #8B4513;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 25px;
+    text-transform: uppercase;
+    font-family: 'Georgia', serif;
+    box-shadow: 0 5px 0 #8B4513, 0 8px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.1s;
+}
+
+.game-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #8B4513, 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Medal display */
+#medal-display {
+    font-size: 4rem;
+    margin: 15px 0;
+}
+
+/* Back button */
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #aaa;
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 10px 15px;
+    border: 2px solid #666;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.back-btn:hover, .back-btn:active {
+    color: #ffd700;
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.back-link {
+    color: #aaa;
+    text-decoration: none;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.back-link:hover {
+    color: #ffd700;
+}
+
+/* HUD */
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 50;
+    pointer-events: none;
+}
+
+#score-display {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 3px 3px 0 #000,
+                 -2px -2px 0 #000,
+                 2px -2px 0 #000,
+                 -2px 2px 0 #000,
+                 0 4px 0 #000;
+    font-family: 'Georgia', serif;
+}
+
+/* Score popup animation */
+.score-popup {
+    position: absolute;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 2px 2px 0 #000;
+    animation: scoreFloat 0.8s ease-out forwards;
+    pointer-events: none;
+    z-index: 60;
+}
+
+@keyframes scoreFloat {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(1.5);
+    }
+}
+
+/* New high score flash */
+.new-highscore {
+    color: #ff0;
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Mobile landscape optimization */
+@media (orientation: landscape) {
+    .screen h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .sandal-preview {
+        font-size: 3rem;
+        margin: 10px 0;
+    }
+
+    .screen p {
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .game-btn {
+        padding: 12px 40px;
+        font-size: 1.1rem;
+        margin-top: 15px;
+    }
+
+    #score-display {
+        font-size: 3rem;
+    }
+}
+
+/* Small screens */
+@media (max-height: 500px) {
+    .sandal-preview {
+        display: none;
+    }
+}

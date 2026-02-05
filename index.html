@@ -5,53 +5,290 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Space Lane Shooter</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Lane Arcade</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(to right, #00ffff, #ff00ff, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            margin-bottom: 10px;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .game-card:hover, .game-card:active {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-card:hover::before {
+            opacity: 1;
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .game-card:nth-child(2) .game-icon {
+            animation-delay: 0.5s;
+        }
+
+        .game-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .game-card p {
+            color: #aaa;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .game-card .play-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #00ffff, #0088ff);
+            color: #000;
+            font-weight: bold;
+            border-radius: 25px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .game-card:hover .play-btn {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        /* Shooter card theme */
+        .game-card.shooter {
+            border-color: rgba(0, 255, 255, 0.3);
+        }
+
+        .game-card.shooter:hover {
+            border-color: #00ffff;
+            box-shadow: 0 20px 40px rgba(0, 255, 255, 0.2);
+        }
+
+        /* Flappy card theme */
+        .game-card.flappy {
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .game-card.flappy:hover {
+            border-color: #ffd700;
+            box-shadow: 0 20px 40px rgba(255, 215, 0, 0.2);
+        }
+
+        .game-card.flappy .play-btn {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+        }
+
+        .game-card.flappy:hover .play-btn {
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Coming soon card */
+        .game-card.coming-soon {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .game-card.coming-soon .play-btn {
+            background: #444;
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 50px;
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        /* Floating particles background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: rise 10s infinite;
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) scale(1);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .game-card {
+                padding: 25px;
+            }
+
+            .game-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
+    <div class="particles" id="particles"></div>
 
-        <!-- Start Screen -->
-        <div id="start-screen" class="screen">
-            <h1>Space Lane Shooter</h1>
-            <p>Move side to side to dodge enemies</p>
-            <p>Auto-fire destroys enemies</p>
-            <p>Collect power-ups for upgrades!</p>
-            <button id="start-btn" class="game-btn">START GAME</button>
-            <div id="character-select">
-                <h3>Select Character</h3>
-                <div id="character-options"></div>
-            </div>
+    <div class="container">
+        <header>
+            <h1>Lane Arcade</h1>
+            <p class="subtitle">Mobile Web Games Collection</p>
+        </header>
+
+        <div class="games-grid">
+            <a href="shooter.html" class="game-card shooter">
+                <span class="game-icon">🚀</span>
+                <h2>Space Lane Shooter</h2>
+                <p>Blast through waves of enemies, collect power-ups, and defeat epic bosses in this action-packed shooter!</p>
+                <span class="play-btn">Play Now</span>
+            </a>
+
+            <a href="flappy.html" class="game-card flappy">
+                <span class="game-icon">👟</span>
+                <h2>Flappy Sandal</h2>
+                <p>Guide Mars' winged sandal through ancient Corinthian pillars in this mythological flappy adventure!</p>
+                <span class="play-btn">Play Now</span>
+            </a>
         </div>
 
-        <!-- Game Over Screen -->
-        <div id="gameover-screen" class="screen hidden">
-            <h1>GAME OVER</h1>
-            <p>Score: <span id="final-score">0</span></p>
-            <p>High Score: <span id="high-score">0</span></p>
-            <button id="restart-btn" class="game-btn">PLAY AGAIN</button>
-        </div>
-
-        <!-- Pause Screen -->
-        <div id="pause-screen" class="screen hidden">
-            <h1>PAUSED</h1>
-            <button id="resume-btn" class="game-btn">RESUME</button>
-        </div>
-
-        <!-- HUD -->
-        <div id="hud">
-            <div id="score-display">Score: <span id="score">0</span></div>
-            <div id="health-display">
-                <span id="health-hearts"></span>
-            </div>
-            <div id="weapon-display">
-                <span id="current-weapon">Basic</span>
-            </div>
-            <button id="pause-btn">II</button>
-        </div>
+        <footer>
+            <p>Tap a game to play. Works best on mobile devices.</p>
+        </footer>
     </div>
 
-    <script src="game.js"></script>
+    <script>
+        // Create floating particles
+        const particlesContainer = document.getElementById('particles');
+        const particleCount = 20;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 10 + 's';
+            particle.style.animationDuration = (8 + Math.random() * 6) + 's';
+            particlesContainer.appendChild(particle);
+        }
+    </script>
 </body>
 </html>
