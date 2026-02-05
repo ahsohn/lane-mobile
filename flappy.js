@@ -549,9 +549,9 @@ class Game {
         this.state = 'playing';
         this.score = 0;
         this.pillars = [];
-        // Start with lastPillarX positioned so first pillar spawns after a delay
-        // This gives the player time to get ready
-        this.lastPillarX = this.canvas.width - CONFIG.PILLAR_SPACING + 200;
+        // Set to 0 so first pillar spawns immediately off-screen
+        // Player still has time as pillar travels from right edge
+        this.lastPillarX = 0;
 
         this.sandal = new Sandal(this);
 
