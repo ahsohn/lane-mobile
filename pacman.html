@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Lemon Chomper - Lane Arcade</title>
+    <link rel="stylesheet" href="pacman.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="score-display">Score: <span id="score">0</span></div>
+            <div id="lives-display">Lives: <span id="lives"></span></div>
+            <div id="level-display">Level: <span id="level">1</span></div>
+        </div>
+
+        <!-- D-Pad Controls -->
+        <div id="dpad">
+            <button id="btn-up" class="dpad-btn">&#9650;</button>
+            <button id="btn-left" class="dpad-btn">&#9664;</button>
+            <button id="btn-right" class="dpad-btn">&#9654;</button>
+            <button id="btn-down" class="dpad-btn">&#9660;</button>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h1>Lemon Chomper</h1>
+            <p>Help Polly the Parrot collect all the lemons!</p>
+            <p class="controls-hint">Use the D-Pad or swipe to move</p>
+            <button id="start-btn" class="game-btn">START GAME</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>GAME OVER</h1>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p>High Score: <span id="high-score">0</span></p>
+            <button id="restart-btn" class="game-btn">PLAY AGAIN</button>
+        </div>
+
+        <!-- Level Complete Screen -->
+        <div id="levelcomplete-screen" class="screen hidden">
+            <h1>LEVEL COMPLETE!</h1>
+            <p>Get ready for Level <span id="next-level">2</span></p>
+        </div>
+
+        <!-- Back Button -->
+        <a href="index.html" id="back-btn">&#8592; Back</a>
+    </div>
+
+    <script src="pacman.js"></script>
+</body>
+</html>

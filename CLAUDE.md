@@ -28,6 +28,9 @@ lane-mobile/
 ├── bike.html       # Road Rider CB650 game
 ├── bike.css
 ├── bike.js
+├── pacman.html     # Lemon Chomper game
+├── pacman.css
+├── pacman.js
 └── CLAUDE.md       # This file
 ```
 
@@ -45,11 +48,20 @@ lane-mobile/
 - High scores saved to localStorage (`flappySandalHighScore`)
 
 ### Road Rider CB650
-- Side-scrolling motorcycle racing game
+- Vertical racing game with procedural road generation
 - Player: Honda CB650 classic motorcycle
-- Tap to jump over obstacles (rocks, gaps, platforms, ramps)
-- Desert setting with parallax mountains
+- Drag to steer, stay on the road
+- Obstacles: rocks, oil slicks, barriers, ramps
 - High scores saved to localStorage (`roadRiderHighScore`)
+
+### Lemon Chomper
+- Pac-Man style maze game
+- Player: Polly the Parrot
+- Dots: Lemons to collect
+- Power pellets: Mangos (let you eat the cats)
+- Enemies: Hungry cats with different behaviors
+- D-pad and swipe controls
+- High scores saved to localStorage (`lemonChomperHighScore`)
 
 ## Deployment
 
