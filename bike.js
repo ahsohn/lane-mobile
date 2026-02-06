@@ -87,6 +87,9 @@ class Road {
         this.curveOffset = 0;
         this.curvePhase = 0;
         this.segmentHeight = 5;
+        this.segmentsCreated = 0;
+        // Keep road straight for first ~5 seconds (at speed 8, ~400 segments)
+        this.straightSegments = 400;
         this.generateInitialRoad();
     }
 
@@ -98,13 +101,22 @@ class Road {
     }
 
     addSegment(y) {
+        this.segmentsCreated++;
+
+        // Calculate curve intensity (0 during straight section, ramps up to 1)
+        let curveIntensity = 0;
+        if (this.segmentsCreated > this.straightSegments) {
+            // Gradually ramp up curves over 200 segments after straight section
+            curveIntensity = Math.min(1, (this.segmentsCreated - this.straightSegments) / 200);
+        }
+
         // Procedural curve using sine waves
         this.curvePhase += CONFIG.CURVE_FREQUENCY;
 
-        // Multiple sine waves for more interesting curves
-        const curve1 = Math.sin(this.curvePhase) * CONFIG.CURVE_AMPLITUDE;
-        const curve2 = Math.sin(this.curvePhase * 0.5) * CONFIG.CURVE_AMPLITUDE * 0.5;
-        const curve3 = Math.sin(this.curvePhase * 2) * CONFIG.CURVE_AMPLITUDE * 0.25;
+        // Multiple sine waves for more interesting curves (scaled by intensity)
+        const curve1 = Math.sin(this.curvePhase) * CONFIG.CURVE_AMPLITUDE * curveIntensity;
+        const curve2 = Math.sin(this.curvePhase * 0.5) * CONFIG.CURVE_AMPLITUDE * 0.5 * curveIntensity;
+        const curve3 = Math.sin(this.curvePhase * 2) * CONFIG.CURVE_AMPLITUDE * 0.25 * curveIntensity;
 
         const centerX = this.game.canvas.width / 2 + curve1 + curve2 + curve3;
 
