@@ -111,9 +111,9 @@ const POWERUP_TYPES = [
 const ENEMY_TYPES = [
     { id: 'basic', emoji: '👾', health: 1, speed: 1, points: 10, size: 35 },
     { id: 'fast', emoji: '🦇', health: 1, speed: 2, points: 15, size: 30 },
-    { id: 'tank', emoji: '🤖', health: 3, speed: 0.5, points: 30, size: 45 },
-    { id: 'zigzag', emoji: '🦑', health: 2, speed: 1, points: 25, size: 35, pattern: 'zigzag' },
-    { id: 'boss', emoji: '👹', health: 20, speed: 0.25, points: 500, size: 80, isBoss: true, pattern: 'boss' }
+    { id: 'tank', emoji: '🤖', health: 3, speed: 0.5, points: 30, size: 45, canShoot: true, fireRate: 2000, bulletPattern: 'single' },
+    { id: 'zigzag', emoji: '🦑', health: 2, speed: 1, points: 25, size: 35, pattern: 'zigzag', canShoot: true, fireRate: 1500, bulletPattern: 'spread' },
+    { id: 'boss', emoji: '👹', health: 20, speed: 0.25, points: 500, size: 80, isBoss: true, pattern: 'boss', canShoot: true, fireRate: 800, bulletPattern: 'boss' }
 ];
 
 // Boss spawn thresholds (score milestones)
@@ -347,6 +347,7 @@ class Player {
         this.invincible = false;
         this.invincibleTimer = 0;
         this.targetX = this.x;
+        this.targetY = this.y;
     }
 
     setWeapon(weaponName) {
@@ -361,10 +362,13 @@ class Player {
     update(deltaTime) {
         // Smooth movement towards target
         const dx = this.targetX - this.x;
+        const dy = this.targetY - this.y;
         this.x += dx * 0.15;
+        this.y += dy * 0.15;
 
         // Keep within bounds
         this.x = Math.max(this.width / 2, Math.min(this.game.canvas.width - this.width / 2, this.x));
+        this.y = Math.max(this.height / 2, Math.min(this.game.canvas.height - this.height / 2, this.y));
 
         // Update shield
         if (this.shieldActive) {
@@ -492,8 +496,12 @@ class Player {
         ctx.restore();
     }
 
-    moveTo(x) {
+    moveTo(x, y) {
         this.targetX = x;
+        if (y !== undefined) {
+            // Position ship above finger so it's always visible
+            this.targetY = y - 60;
+        }
     }
 }
 
@@ -546,6 +554,10 @@ class Enemy {
         this.pattern = type.pattern || 'straight';
         this.startX = x;
         this.time = 0;
+        this.lastShot = 0;
+        this.canShoot = type.canShoot || false;
+        this.fireRate = type.fireRate || 2000;
+        this.bulletPattern = type.bulletPattern || 'single';
     }
 
     update(deltaTime) {
@@ -572,6 +584,96 @@ class Enemy {
 
         if (this.pattern !== 'boss') {
             this.y += this.speed;
+        }
+
+        // Enemy shooting
+        if (this.canShoot && this.y > 0) {
+            this.shoot();
+        }
+    }
+
+    shoot() {
+        const now = Date.now();
+        if (now - this.lastShot < this.fireRate) return;
+        this.lastShot = now;
+
+        const bulletSpeed = 5;
+
+        switch (this.bulletPattern) {
+            case 'single':
+                // Single shot straight down
+                this.game.enemyBullets.push({
+                    x: this.x,
+                    y: this.y + this.height / 2,
+                    vx: 0,
+                    vy: bulletSpeed,
+                    color: '#ff4444',
+                    size: 8
+                });
+                break;
+
+            case 'spread':
+                // 3-way spread shot
+                for (let i = -1; i <= 1; i++) {
+                    const angle = 90 + i * 25; // degrees, 90 is straight down
+                    const rad = angle * Math.PI / 180;
+                    this.game.enemyBullets.push({
+                        x: this.x,
+                        y: this.y + this.height / 2,
+                        vx: Math.cos(rad) * bulletSpeed,
+                        vy: Math.sin(rad) * bulletSpeed,
+                        color: '#ff66ff',
+                        size: 6
+                    });
+                }
+                break;
+
+            case 'boss':
+                // Boss has multiple attack patterns that cycle
+                const patternIndex = Math.floor(this.time / 3000) % 3;
+
+                if (patternIndex === 0) {
+                    // Wide spread
+                    for (let i = -2; i <= 2; i++) {
+                        const angle = 90 + i * 20;
+                        const rad = angle * Math.PI / 180;
+                        this.game.enemyBullets.push({
+                            x: this.x,
+                            y: this.y + this.height / 2,
+                            vx: Math.cos(rad) * bulletSpeed,
+                            vy: Math.sin(rad) * bulletSpeed,
+                            color: '#ff0000',
+                            size: 10
+                        });
+                    }
+                } else if (patternIndex === 1) {
+                    // Aimed shot at player
+                    const dx = this.game.player.x - this.x;
+                    const dy = this.game.player.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    this.game.enemyBullets.push({
+                        x: this.x,
+                        y: this.y + this.height / 2,
+                        vx: (dx / dist) * bulletSpeed * 1.2,
+                        vy: (dy / dist) * bulletSpeed * 1.2,
+                        color: '#ffff00',
+                        size: 12
+                    });
+                } else {
+                    // Circular burst
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (i / 8) * Math.PI * 2;
+                        this.game.enemyBullets.push({
+                            x: this.x,
+                            y: this.y,
+                            vx: Math.cos(angle) * bulletSpeed * 0.8,
+                            vy: Math.sin(angle) * bulletSpeed * 0.8,
+                            color: '#ff6600',
+                            size: 8
+                        });
+                    }
+                }
+                break;
         }
     }
 
@@ -714,6 +816,7 @@ class Game {
 
         this.player = null;
         this.bullets = [];
+        this.enemyBullets = [];
         this.enemies = [];
         this.powerups = [];
 
@@ -766,15 +869,14 @@ class Game {
     }
 
     setupInput() {
-        // Touch controls
+        // Touch controls - ship follows finger position
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.audio.init();
 
-            if (this.state === 'playing') {
+            if (this.state === 'playing' && this.player) {
                 const touch = e.touches[0];
-                this.touchStartX = touch.clientX;
-                this.playerStartX = this.player.x;
+                this.player.moveTo(touch.clientX, touch.clientY);
             }
         }, { passive: false });
 
@@ -783,8 +885,7 @@ class Game {
 
             if (this.state === 'playing' && this.player) {
                 const touch = e.touches[0];
-                const deltaX = touch.clientX - this.touchStartX;
-                this.player.moveTo(this.playerStartX + deltaX);
+                this.player.moveTo(touch.clientX, touch.clientY);
             }
         }, { passive: false });
 
@@ -793,16 +894,14 @@ class Game {
         this.canvas.addEventListener('mousedown', (e) => {
             this.audio.init();
             mouseDown = true;
-            if (this.state === 'playing') {
-                this.touchStartX = e.clientX;
-                this.playerStartX = this.player.x;
+            if (this.state === 'playing' && this.player) {
+                this.player.moveTo(e.clientX, e.clientY);
             }
         });
 
         this.canvas.addEventListener('mousemove', (e) => {
             if (mouseDown && this.state === 'playing' && this.player) {
-                const deltaX = e.clientX - this.touchStartX;
-                this.player.moveTo(this.playerStartX + deltaX);
+                this.player.moveTo(e.clientX, e.clientY);
             }
         });
 
@@ -891,6 +990,7 @@ class Game {
         this.score = 0;
         this.difficulty = 0;
         this.bullets = [];
+        this.enemyBullets = [];
         this.enemies = [];
         this.powerups = [];
         this.lastEnemySpawn = Date.now();
@@ -1163,6 +1263,26 @@ class Game {
                 this.powerups.splice(i, 1);
             }
         }
+
+        // Enemy Bullet vs Player collisions
+        for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+            const bullet = this.enemyBullets[i];
+
+            if (this.circleCollision(
+                this.player.x, this.player.y, this.player.width / 3,
+                bullet.x, bullet.y, bullet.size / 2
+            )) {
+                // Remove bullet
+                this.enemyBullets.splice(i, 1);
+                this.particles.emit(bullet.x, bullet.y, bullet.color, 10);
+
+                // Damage player
+                if (this.player.takeDamage()) {
+                    this.gameOver();
+                    return;
+                }
+            }
+        }
     }
 
     rectCollision(x1, y1, w1, h1, x2, y2, w2, h2) {
@@ -1208,10 +1328,18 @@ class Game {
         // Update player
         this.player.update(deltaTime);
 
-        // Update bullets
+        // Update player bullets
         this.bullets = this.bullets.filter(bullet => {
             Bullet.update(bullet);
             return !Bullet.isOffscreen(bullet, this.canvas);
+        });
+
+        // Update enemy bullets
+        this.enemyBullets = this.enemyBullets.filter(bullet => {
+            bullet.x += bullet.vx;
+            bullet.y += bullet.vy;
+            return bullet.x > -20 && bullet.x < this.canvas.width + 20 &&
+                   bullet.y > -20 && bullet.y < this.canvas.height + 20;
         });
 
         // Update enemies
@@ -1257,8 +1385,19 @@ class Game {
             // Draw enemies
             this.enemies.forEach(enemy => enemy.draw(this.ctx));
 
-            // Draw bullets
+            // Draw player bullets
             this.bullets.forEach(bullet => Bullet.draw(this.ctx, bullet));
+
+            // Draw enemy bullets
+            this.enemyBullets.forEach(bullet => {
+                this.ctx.fillStyle = bullet.color;
+                this.ctx.shadowColor = bullet.color;
+                this.ctx.shadowBlur = 8;
+                this.ctx.beginPath();
+                this.ctx.arc(bullet.x, bullet.y, bullet.size / 2, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.shadowBlur = 0;
+            });
 
             // Draw player
             if (this.player) {
