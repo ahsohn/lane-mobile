@@ -56,7 +56,7 @@ const WEAPONS = {
         spread: 15,
         bulletColor: '#ffff00',
         damage: 1,
-        ammo: 30 // 30 shots
+        ammo: 120
     },
     triple: {
         name: 'Triple Shot',
@@ -65,7 +65,7 @@ const WEAPONS = {
         spread: 20,
         bulletColor: '#ff00ff',
         damage: 1,
-        ammo: 25 // 25 shots
+        ammo: 100
     },
     rapid: {
         name: 'Rapid Fire',
@@ -74,7 +74,7 @@ const WEAPONS = {
         spread: 5,
         bulletColor: '#ff6600',
         damage: 1,
-        ammo: 50 // 50 shots
+        ammo: 200
     },
     laser: {
         name: 'Laser Beam',
@@ -84,7 +84,7 @@ const WEAPONS = {
         bulletColor: '#ff0000',
         damage: 0.5,
         isLaser: true,
-        ammo: 100 // 100 shots (fires fast so needs more)
+        ammo: 400
     },
     spread: {
         name: 'Spread Shot',
@@ -93,13 +93,54 @@ const WEAPONS = {
         spread: 40,
         bulletColor: '#00ff00',
         damage: 1,
-        ammo: 20 // 20 shots
+        ammo: 80
+    },
+    homing: {
+        name: 'Homing Missile',
+        fireRate: 600,
+        bulletCount: 1,
+        spread: 0,
+        bulletColor: '#ff3399',
+        damage: 3,
+        isHoming: true,
+        ammo: 60
+    },
+    plasma: {
+        name: 'Plasma Wave',
+        fireRate: 500,
+        bulletCount: 1,
+        spread: 0,
+        bulletColor: '#9933ff',
+        damage: 2,
+        isPlasma: true,
+        ammo: 50
+    },
+    piercing: {
+        name: 'Piercing Shot',
+        fireRate: 400,
+        bulletCount: 1,
+        spread: 0,
+        bulletColor: '#00ffcc',
+        damage: 1.5,
+        isPiercing: true,
+        ammo: 80
+    },
+    burst: {
+        name: 'Burst Fire',
+        fireRate: 150,
+        bulletCount: 3,
+        spread: 5,
+        bulletColor: '#ffcc00',
+        damage: 1,
+        isBurst: true,
+        burstDelay: 50,
+        ammo: 120
     }
 };
 
 // Power-up types
 const POWERUP_TYPES = [
-    { type: 'weapon', weapons: ['double', 'triple', 'rapid', 'laser', 'spread'], emoji: '🔫', color: '#ffff00' },
+    { type: 'weapon', weapons: ['double', 'triple', 'rapid', 'laser', 'spread', 'homing', 'plasma', 'piercing', 'burst'], emoji: '🔫', color: '#ffff00' },
     { type: 'health', emoji: '❤️', color: '#ff0000' },
     { type: 'maxhealth', emoji: '💖', color: '#ff69b4' }, // Increases max health permanently
     { type: 'shield', emoji: '🛡️', color: '#00ffff' },
@@ -232,13 +273,13 @@ class Particle {
 
     draw(ctx) {
         const lifeRatio = this.life / this.maxLife;
-        // Keep particles more visible - minimum alpha of 0.4
-        const alpha = 0.4 + lifeRatio * 0.6;
+        // Keep particles very visible - minimum alpha of 0.7
+        const alpha = 0.7 + lifeRatio * 0.3;
         ctx.globalAlpha = alpha;
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        // Keep size more consistent - minimum 60% of original size
-        ctx.arc(this.x, this.y, this.size * (0.6 + lifeRatio * 0.4), 0, Math.PI * 2);
+        // Keep size consistent - minimum 80% of original size
+        ctx.arc(this.x, this.y, this.size * (0.8 + lifeRatio * 0.2), 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
     }
@@ -414,6 +455,44 @@ class Player {
 
         this.game.audio.shoot();
 
+        // Special handling for plasma wave
+        if (weapon.isPlasma) {
+            const bullet = {
+                x: this.x,
+                y: this.y - this.height / 2,
+                vx: 0,
+                vy: -CONFIG.BULLET_SPEED * 0.8,
+                color: weapon.bulletColor,
+                damage: weapon.damage,
+                isPlasma: true,
+                width: 80,
+                height: 15
+            };
+            this.game.bullets.push(bullet);
+            return;
+        }
+
+        // Special handling for burst fire
+        if (weapon.isBurst) {
+            for (let b = 0; b < 3; b++) {
+                setTimeout(() => {
+                    if (this.game.state !== 'playing') return;
+                    const bullet = {
+                        x: this.x,
+                        y: this.y - this.height / 2,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -CONFIG.BULLET_SPEED,
+                        color: weapon.bulletColor,
+                        damage: weapon.damage,
+                        width: 6,
+                        height: 12
+                    };
+                    this.game.bullets.push(bullet);
+                }, b * weapon.burstDelay);
+            }
+            return;
+        }
+
         const bulletCount = weapon.bulletCount;
         const spreadAngle = weapon.spread;
 
@@ -434,8 +513,10 @@ class Player {
                 color: weapon.bulletColor,
                 damage: weapon.damage,
                 isLaser: weapon.isLaser || false,
-                width: weapon.isLaser ? 4 : 6,
-                height: weapon.isLaser ? 20 : 12
+                isHoming: weapon.isHoming || false,
+                isPiercing: weapon.isPiercing || false,
+                width: weapon.isLaser ? 4 : (weapon.isHoming ? 10 : 6),
+                height: weapon.isLaser ? 20 : (weapon.isHoming ? 16 : 12)
             };
             this.game.bullets.push(bullet);
         }
@@ -512,7 +593,36 @@ class Player {
 // BULLET CLASS
 // ============================================
 class Bullet {
-    static update(bullet) {
+    static update(bullet, enemies) {
+        // Homing missiles track nearest enemy
+        if (bullet.isHoming && enemies && enemies.length > 0) {
+            let nearestEnemy = null;
+            let nearestDist = Infinity;
+
+            for (const enemy of enemies) {
+                const dx = enemy.x - bullet.x;
+                const dy = enemy.y - bullet.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestEnemy = enemy;
+                }
+            }
+
+            if (nearestEnemy) {
+                const dx = nearestEnemy.x - bullet.x;
+                const dy = nearestEnemy.y - bullet.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                // Gradually turn towards target
+                const targetVx = (dx / dist) * CONFIG.BULLET_SPEED * 0.9;
+                const targetVy = (dy / dist) * CONFIG.BULLET_SPEED * 0.9;
+
+                bullet.vx += (targetVx - bullet.vx) * 0.1;
+                bullet.vy += (targetVy - bullet.vy) * 0.1;
+            }
+        }
+
         bullet.x += bullet.vx;
         bullet.y += bullet.vy;
     }
@@ -524,6 +634,45 @@ class Bullet {
 
         if (bullet.isLaser) {
             ctx.fillRect(bullet.x - bullet.width / 2, bullet.y - bullet.height / 2, bullet.width, bullet.height);
+        } else if (bullet.isPlasma) {
+            // Plasma wave - wide wavy rectangle
+            ctx.beginPath();
+            const waveOffset = Math.sin(Date.now() * 0.02) * 5;
+            ctx.ellipse(bullet.x, bullet.y + waveOffset, bullet.width / 2, bullet.height / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Inner glow
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 0.7;
+            ctx.beginPath();
+            ctx.ellipse(bullet.x, bullet.y + waveOffset, bullet.width / 3, bullet.height / 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        } else if (bullet.isHoming) {
+            // Homing missile - pointed shape
+            ctx.save();
+            ctx.translate(bullet.x, bullet.y);
+            const angle = Math.atan2(bullet.vy, bullet.vx);
+            ctx.rotate(angle + Math.PI / 2);
+            ctx.beginPath();
+            ctx.moveTo(0, -bullet.height / 2);
+            ctx.lineTo(-bullet.width / 2, bullet.height / 2);
+            ctx.lineTo(bullet.width / 2, bullet.height / 2);
+            ctx.closePath();
+            ctx.fill();
+            // Trail
+            ctx.fillStyle = '#ff6600';
+            ctx.beginPath();
+            ctx.ellipse(0, bullet.height / 2 + 5, 4, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        } else if (bullet.isPiercing) {
+            // Piercing shot - elongated with trail
+            ctx.fillRect(bullet.x - bullet.width / 2, bullet.y - bullet.height, bullet.width, bullet.height * 2);
+            // Bright tip
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(bullet.x, bullet.y - bullet.height, bullet.width / 2, 0, Math.PI * 2);
+            ctx.fill();
         } else {
             ctx.beginPath();
             ctx.ellipse(bullet.x, bullet.y, bullet.width / 2, bullet.height / 2, 0, 0, Math.PI * 2);
@@ -1199,8 +1348,8 @@ class Game {
                     bullet.x - bullet.width / 2, bullet.y - bullet.height / 2, bullet.width, bullet.height,
                     enemy.x - enemy.width / 2, enemy.y - enemy.height / 2, enemy.width, enemy.height
                 )) {
-                    // Remove bullet (unless it's a laser)
-                    if (!bullet.isLaser) {
+                    // Remove bullet (unless it's a laser, piercing, or plasma)
+                    if (!bullet.isLaser && !bullet.isPiercing && !bullet.isPlasma) {
                         this.bullets.splice(i, 1);
                     }
 
@@ -1333,7 +1482,7 @@ class Game {
 
         // Update player bullets
         this.bullets = this.bullets.filter(bullet => {
-            Bullet.update(bullet);
+            Bullet.update(bullet, this.enemies);
             return !Bullet.isOffscreen(bullet, this.canvas);
         });
 
