@@ -111,8 +111,8 @@ const POWERUP_TYPES = [
 const ENEMY_TYPES = [
     { id: 'basic', emoji: '👾', health: 1, speed: 1, points: 10, size: 35 },
     { id: 'fast', emoji: '🦇', health: 1, speed: 2, points: 15, size: 30 },
-    { id: 'tank', emoji: '🤖', health: 3, speed: 0.5, points: 30, size: 45, canShoot: true, fireRate: 2000, bulletPattern: 'single' },
-    { id: 'zigzag', emoji: '🦑', health: 2, speed: 1, points: 25, size: 35, pattern: 'zigzag', canShoot: true, fireRate: 1500, bulletPattern: 'spread' },
+    { id: 'tank', emoji: '🤖', health: 3, speed: 0.5, points: 30, size: 45, canShoot: true, fireRate: 4000, bulletPattern: 'single' },
+    { id: 'zigzag', emoji: '🦑', health: 2, speed: 1, points: 25, size: 35, pattern: 'zigzag', canShoot: true, fireRate: 3000, bulletPattern: 'spread' },
     { id: 'boss', emoji: '👹', health: 20, speed: 0.25, points: 500, size: 80, isBoss: true, pattern: 'boss', canShoot: true, fireRate: 800, bulletPattern: 'boss' }
 ];
 
@@ -1390,13 +1390,20 @@ class Game {
 
             // Draw enemy bullets
             this.enemyBullets.forEach(bullet => {
+                // Outer glow
                 this.ctx.fillStyle = bullet.color;
                 this.ctx.shadowColor = bullet.color;
-                this.ctx.shadowBlur = 8;
+                this.ctx.shadowBlur = 10;
                 this.ctx.beginPath();
-                this.ctx.arc(bullet.x, bullet.y, bullet.size / 2, 0, Math.PI * 2);
+                this.ctx.arc(bullet.x, bullet.y, bullet.size / 2 + 2, 0, Math.PI * 2);
                 this.ctx.fill();
+
+                // Bright core for visibility
                 this.ctx.shadowBlur = 0;
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.beginPath();
+                this.ctx.arc(bullet.x, bullet.y, bullet.size / 4, 0, Math.PI * 2);
+                this.ctx.fill();
             });
 
             // Draw player
