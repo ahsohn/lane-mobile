@@ -126,7 +126,13 @@ class Road {
         const curve2 = Math.sin(this.curvePhase * 0.5) * CONFIG.CURVE_AMPLITUDE * 0.5 * curveIntensity;
         const curve3 = Math.sin(this.curvePhase * 2) * CONFIG.CURVE_AMPLITUDE * 0.25 * curveIntensity;
 
-        const centerX = this.game.canvas.width / 2 + curve1 + curve2 + curve3;
+        let centerX = this.game.canvas.width / 2 + curve1 + curve2 + curve3;
+
+        // Clamp road so it stays fully on screen
+        const halfRoad = CONFIG.ROAD_WIDTH / 2;
+        const minCenter = halfRoad + 10; // 10px margin
+        const maxCenter = this.game.canvas.width - halfRoad - 10;
+        centerX = Math.max(minCenter, Math.min(maxCenter, centerX));
 
         this.segments.push({
             y: y,
