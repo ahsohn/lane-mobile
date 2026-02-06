@@ -4,15 +4,15 @@
 
 // Game Configuration
 const CONFIG = {
-    ROAD_WIDTH: 200,
-    SCROLL_SPEED: 8,
-    MAX_SPEED: 14,
+    ROAD_WIDTH: 260,
+    SCROLL_SPEED: 5,
+    MAX_SPEED: 16,
     BIKE_WIDTH: 50,
     BIKE_HEIGHT: 90,
     CURVE_FREQUENCY: 0.008,
     CURVE_AMPLITUDE: 150,
-    OBSTACLE_SPAWN_RATE: 1500,
-    RAMP_SPAWN_RATE: 4000
+    OBSTACLE_SPAWN_RATE: 2500,
+    RAMP_SPAWN_RATE: 6000
 };
 
 // ============================================
@@ -894,8 +894,8 @@ class Game {
     update() {
         if (this.state !== 'playing') return;
 
-        // Gradually increase speed
-        this.speed = Math.min(CONFIG.MAX_SPEED, CONFIG.SCROLL_SPEED + this.distance * 0.001);
+        // Gradually increase speed (slower ramp up)
+        this.speed = Math.min(CONFIG.MAX_SPEED, CONFIG.SCROLL_SPEED + this.distance * 0.0005);
 
         // Update distance
         this.distance += Math.floor(this.speed * 0.3);
