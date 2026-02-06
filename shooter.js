@@ -231,11 +231,14 @@ class Particle {
     }
 
     draw(ctx) {
-        const alpha = this.life / this.maxLife;
+        const lifeRatio = this.life / this.maxLife;
+        // Keep particles more visible - minimum alpha of 0.4
+        const alpha = 0.4 + lifeRatio * 0.6;
         ctx.globalAlpha = alpha;
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * alpha, 0, Math.PI * 2);
+        // Keep size more consistent - minimum 60% of original size
+        ctx.arc(this.x, this.y, this.size * (0.6 + lifeRatio * 0.4), 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
     }
