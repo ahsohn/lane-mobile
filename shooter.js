@@ -333,7 +333,7 @@ class StarField {
                 y: Math.random() * this.canvas.height,
                 size: Math.random() * 2 + 0.5,
                 speed: Math.random() * 2 + 0.5,
-                brightness: Math.random()
+                brightness: 0.5 + Math.random() * 0.5 // Constant brightness between 0.5 and 1.0
             });
         }
     }
@@ -341,7 +341,7 @@ class StarField {
     update() {
         this.stars.forEach(star => {
             star.y += star.speed;
-            star.brightness = 0.3 + Math.sin(Date.now() * 0.005 + star.x) * 0.3;
+            // Keep constant brightness - no pulsing
             if (star.y > this.canvas.height) {
                 star.y = 0;
                 star.x = Math.random() * this.canvas.width;
@@ -833,6 +833,9 @@ class Enemy {
     }
 
     draw(ctx) {
+        // Ensure full opacity for enemies
+        ctx.globalAlpha = 1;
+
         // Draw enemy emoji
         ctx.font = `${this.width}px Arial`;
         ctx.textAlign = 'center';
