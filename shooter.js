@@ -272,16 +272,12 @@ class Particle {
     }
 
     draw(ctx) {
-        const lifeRatio = this.life / this.maxLife;
-        // Keep particles very visible - minimum alpha of 0.7
-        const alpha = 0.7 + lifeRatio * 0.3;
-        ctx.globalAlpha = alpha;
+        // No fading - keep particles fully visible
+        ctx.globalAlpha = 1;
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        // Keep size consistent - minimum 80% of original size
-        ctx.arc(this.x, this.y, this.size * (0.8 + lifeRatio * 0.2), 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 1;
     }
 
     isDead() {
