@@ -12,7 +12,7 @@ const CONFIG = {
     CURVE_FREQUENCY: 0.008,
     CURVE_AMPLITUDE: 150,
     OBSTACLE_SPAWN_RATE: 5000,
-    RAMP_SPAWN_RATE: 6000
+    RAMP_SPAWN_RATE: 8000
 };
 
 // ============================================
@@ -825,17 +825,25 @@ class Game {
     spawnObstacle() {
         const now = Date.now();
 
+        // Don't spawn anything if we spawned recently (prevents clustering)
+        const minTimeBetweenAny = 3000;
+        const lastSpawn = Math.max(this.lastObstacleSpawn, this.lastRampSpawn);
+        if (now - lastSpawn < minTimeBetweenAny) {
+            return;
+        }
+
         // Regular obstacles
         if (now - this.lastObstacleSpawn > CONFIG.OBSTACLE_SPAWN_RATE) {
             this.lastObstacleSpawn = now;
 
             const roadCenter = this.road.getRoadCenterAt(0);
-            const types = ['rock', 'rock', 'oil', 'barrier'];
+            const types = ['rock', 'oil', 'barrier'];
             const type = types[Math.floor(Math.random() * types.length)];
 
             // Spawn on road
-            const offsetX = (Math.random() - 0.5) * CONFIG.ROAD_WIDTH * 0.6;
+            const offsetX = (Math.random() - 0.5) * CONFIG.ROAD_WIDTH * 0.5;
             this.obstacles.push(new Obstacle(this, type, roadCenter + offsetX, -50));
+            return; // Only spawn one thing per frame
         }
 
         // Ramps (less frequent)
