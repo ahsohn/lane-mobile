@@ -87,31 +87,39 @@ class Road {
         this.curveOffset = 0;
         this.curvePhase = 0;
         this.segmentHeight = 5;
-        this.segmentsCreated = 0;
-        // Keep road straight for first ~5 seconds (at speed 8, ~400 segments)
-        this.straightSegments = 400;
+        this.totalDistance = 0;
+        // Keep road straight for first 2000 pixels (~5 seconds at speed 8)
+        this.straightDistance = 2000;
+        // Ramp up curves over next 1000 pixels
+        this.curveRampDistance = 1000;
         this.generateInitialRoad();
     }
 
     generateInitialRoad() {
         const segmentCount = Math.ceil(this.game.canvas.height / this.segmentHeight) + 20;
         for (let i = 0; i < segmentCount; i++) {
-            this.addSegment(this.game.canvas.height - i * this.segmentHeight);
+            this.addSegment(this.game.canvas.height - i * this.segmentHeight, true);
         }
     }
 
-    addSegment(y) {
-        this.segmentsCreated++;
-
-        // Calculate curve intensity (0 during straight section, ramps up to 1)
-        let curveIntensity = 0;
-        if (this.segmentsCreated > this.straightSegments) {
-            // Gradually ramp up curves over 200 segments after straight section
-            curveIntensity = Math.min(1, (this.segmentsCreated - this.straightSegments) / 200);
+    addSegment(y, isInitial = false) {
+        // Track total distance (only count non-initial segments)
+        if (!isInitial) {
+            this.totalDistance += this.segmentHeight;
         }
 
-        // Procedural curve using sine waves
-        this.curvePhase += CONFIG.CURVE_FREQUENCY;
+        // Calculate curve intensity based on distance traveled
+        let curveIntensity = 0;
+        if (this.totalDistance > this.straightDistance) {
+            // Gradually ramp up curves
+            const distanceIntoCurves = this.totalDistance - this.straightDistance;
+            curveIntensity = Math.min(1, distanceIntoCurves / this.curveRampDistance);
+        }
+
+        // Only advance curve phase when we have curves
+        if (curveIntensity > 0) {
+            this.curvePhase += CONFIG.CURVE_FREQUENCY;
+        }
 
         // Multiple sine waves for more interesting curves (scaled by intensity)
         const curve1 = Math.sin(this.curvePhase) * CONFIG.CURVE_AMPLITUDE * curveIntensity;
@@ -710,6 +718,11 @@ class Game {
 
         if (this.road) {
             this.road = new Road(this);
+        }
+        if (this.bike) {
+            // Re-center bike on new canvas size
+            this.bike.x = this.canvas.width / 2;
+            this.bike.targetX = this.canvas.width / 2;
         }
         if (this.scenery) {
             this.scenery = new Scenery(this);
