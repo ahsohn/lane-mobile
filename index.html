@@ -205,6 +205,10 @@
             animation-delay: 2s;
         }
 
+        .game-card:nth-child(6) .game-icon {
+            animation-delay: 2.5s;
+        }
+
         /* Pacman card theme */
         .game-card.pacman {
             border-color: rgba(255, 204, 0, 0.3);
@@ -239,6 +243,24 @@
 
         .game-card.ant:hover .play-btn {
             box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        /* Pinball card theme */
+        .game-card.pinball {
+            border-color: rgba(255, 143, 0, 0.3);
+        }
+
+        .game-card.pinball:hover {
+            border-color: #FF8F00;
+            box-shadow: 0 20px 40px rgba(255, 143, 0, 0.2);
+        }
+
+        .game-card.pinball .play-btn {
+            background: linear-gradient(135deg, #FF8F00, #E65100);
+        }
+
+        .game-card.pinball:hover .play-btn {
+            box-shadow: 0 5px 20px rgba(255, 143, 0, 0.4);
         }
 
         /* Coming soon card */
@@ -363,11 +385,18 @@
                 <p>Surf on slithering snakes through the garden! Dodge obstacles, collect treats, and ride the serpents!</p>
                 <span class="play-btn">Play Now</span>
             </a>
+
+            <a href="pinball.html" class="game-card pinball">
+                <span class="game-icon">&#9881;</span>
+                <h2>Machine Shop Pinball</h2>
+                <p>Launch the ball bearing into spinning gears, hit drop targets, and rack up bonus multipliers!</p>
+                <span class="play-btn">Play Now</span>
+            </a>
         </div>
 
         <footer>
             <p>Tap a game to play. Works best on mobile devices.</p>
-            <p class="version">v3.0.0</p>
+            <p class="version">v4.0.0</p>
         </footer>
     </div>
 

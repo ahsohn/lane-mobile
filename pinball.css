@@ -1,0 +1,206 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #1a1a1a;
+    font-family: 'Arial Black', 'Arial Bold', sans-serif;
+    touch-action: none;
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Screens */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.88);
+    color: #fff;
+    z-index: 100;
+    padding: 20px;
+    text-align: center;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+.screen h1 {
+    font-size: 2.6rem;
+    margin-bottom: 15px;
+    color: #FF8F00;
+    text-shadow: 3px 3px 0 #000,
+                 -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                 -1px 1px 0 #000;
+    letter-spacing: 3px;
+}
+
+.screen p {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: #ddd;
+}
+
+.screen .hint {
+    font-size: 0.9rem;
+    color: #aaa;
+    font-style: italic;
+}
+
+.pinball-preview {
+    font-size: 4rem;
+    margin: 20px 0;
+    animation: gearSpin 4s linear infinite;
+}
+
+@keyframes gearSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.game-btn {
+    padding: 15px 50px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(to bottom, #FF8F00, #E65100);
+    border: 3px solid #fff;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 25px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 0 5px 0 #BF360C, 0 8px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.1s;
+}
+
+.game-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #BF360C, 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Back button */
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #aaa;
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 10px 15px;
+    border: 2px solid #666;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.back-btn:hover, .back-btn:active {
+    color: #FF8F00;
+    border-color: #FF8F00;
+    background: rgba(255, 143, 0, 0.1);
+}
+
+.back-link {
+    color: #aaa;
+    text-decoration: none;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.back-link:hover {
+    color: #FF8F00;
+}
+
+/* HUD */
+#hud {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 50;
+    pointer-events: none;
+}
+
+#score-display {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #FF8F00;
+    text-shadow: 2px 2px 0 #000,
+                 -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                 -1px 1px 0 #000;
+}
+
+#balls-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ccc;
+    text-shadow: 2px 2px 0 #000,
+                 -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                 -1px 1px 0 #000;
+}
+
+/* Mobile landscape optimization */
+@media (orientation: landscape) {
+    .screen h1 {
+        font-size: 2.2rem;
+        margin-bottom: 10px;
+    }
+
+    .pinball-preview {
+        font-size: 2.5rem;
+        margin: 10px 0;
+    }
+
+    .screen p {
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .game-btn {
+        padding: 12px 40px;
+        font-size: 1.1rem;
+        margin-top: 15px;
+    }
+
+    #score-display {
+        font-size: 1.5rem;
+    }
+}
+
+/* Small screens */
+@media (max-height: 500px) {
+    .pinball-preview {
+        display: none;
+    }
+}
