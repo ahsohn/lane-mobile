@@ -190,10 +190,11 @@ class Ball {
         this.trail = [];
     }
 
-    update(tableWidth, tableHeight) {
-        // Gravity + table slope
-        this.vy += CONFIG.GRAVITY;
-        this.vx += CONFIG.TABLE_SLOPE * (this.x < tableWidth / 2 ? -0.01 : 0.01);
+    update(tableWidth, tableHeight, subSteps) {
+        // Gravity + table slope (divided by sub-steps to keep consistent physics)
+        const gravityStep = CONFIG.GRAVITY / (subSteps || 1);
+        this.vy += gravityStep;
+        this.vx += CONFIG.TABLE_SLOPE * (this.x < tableWidth / 2 ? -0.01 : 0.01) / (subSteps || 1);
 
         // Friction
         this.vx *= CONFIG.FRICTION;
@@ -864,8 +865,8 @@ class Table {
         // Left drain guide
         this.walls.push(new Wall(0, ph * 0.82, flipperCenterX - flipperGap - 10, flipperY + 5));
 
-        // Right wall (up to plunger lane)
-        this.walls.push(new Wall(pw, ph * 0.05, pw, ph * 0.82));
+        // Right wall (starts below plunger lane entry gap)
+        this.walls.push(new Wall(pw, ph * 0.15, pw, ph * 0.82));
         // Right drain guide
         this.walls.push(new Wall(pw, ph * 0.82, flipperCenterX + flipperGap + 10, flipperY + 5));
 
@@ -875,8 +876,8 @@ class Table {
         this.walls.push(new Wall(pw * 0.7, ph * 0.02, pw, ph * 0.05));
 
         // Plunger lane walls
-        this.walls.push(new Wall(pw, ph * 0.05, pw, ph)); // Left wall of lane = right wall of playfield
-        // Top curve into playfield (ball entry)
+        this.walls.push(new Wall(pw, ph * 0.15, pw, ph)); // Left wall of lane (gap at top for ball entry)
+        // Top curve into playfield (guides ball left out of plunger lane)
         this.walls.push(new Wall(pw + this.plungerLaneWidth, ph * 0.08, pw, ph * 0.05));
         // Right wall of plunger lane
         this.walls.push(new Wall(pw + this.plungerLaneWidth, ph * 0.08, pw + this.plungerLaneWidth, ph));
@@ -1274,8 +1275,8 @@ class Game {
         const power = this.table.plunger.getLaunchPower();
         if (power < 0.05) return;
 
-        this.ball.vy = -power * 20 - 4;
-        this.ball.vx = -0.5;
+        this.ball.vy = -power * 20 - 5;
+        this.ball.vx = -1.5;
         this.state = 'playing';
         this.table.plunger.release();
         this.audio.launch();
@@ -1408,7 +1409,7 @@ class Game {
         // Physics update (multiple sub-steps for stability)
         const subSteps = 3;
         for (let step = 0; step < subSteps; step++) {
-            this.ball.update(this.canvas.width, this.canvas.height);
+            this.ball.update(this.canvas.width, this.canvas.height, subSteps);
 
             // Wall collisions
             for (const wall of this.table.walls) {
