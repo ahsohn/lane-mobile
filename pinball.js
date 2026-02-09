@@ -8,9 +8,10 @@ const CONFIG = {
     FRICTION: 0.999,
     WALL_BOUNCE: 0.6,
     BUMPER_BOUNCE: 1.8,
-    FLIPPER_LENGTH: 55,
+    FLIPPER_LENGTH: 55, // overridden per-table based on screen size
     FLIPPER_SPEED: 0.18,
     FLIPPER_POWER: 12,
+    DRAIN_OPENING: 28, // consistent gap between flipper tips at rest
     PLUNGER_MAX: 120,
     MAX_BALL_SPEED: 18,
     STARTING_BALLS: 3,
@@ -838,37 +839,55 @@ class Table {
         const pw = this.playWidth;
         const ph = this.playHeight;
 
-        // Flipper positions
-        const flipperY = ph * 0.9;
-        const flipperGap = pw * 0.15;
+        // ---- Flipper geometry (consistent across screen sizes) ----
+        // Scale flipper length with playfield, clamped to reasonable range
+        const flipperLength = Math.max(45, Math.min(75, pw * 0.16));
+        CONFIG.FLIPPER_LENGTH = flipperLength;
+
+        // Compute flipper gap from desired drain opening
+        // At rest angle 0.4, left tip X = pivotX + cos(0.4)*length
+        // Right tip X = pivotX + cos(pi-0.4)*length = pivotX - cos(0.4)*length
+        // Drain opening = rightTipX - leftTipX = 2*gap - 2*cos(0.4)*length
+        // So: gap = (drainOpening + 2*cos(0.4)*length) / 2
+        const restCos = Math.cos(0.4);
+        const flipperGap = (CONFIG.DRAIN_OPENING + 2 * restCos * flipperLength) / 2;
         const flipperCenterX = pw * 0.5;
+        const flipperY = ph * 0.9;
 
-        this.leftFlipper = new Flipper(flipperCenterX - flipperGap, flipperY, 'left');
-        this.rightFlipper = new Flipper(flipperCenterX + flipperGap, flipperY, 'right');
+        const leftPivotX = flipperCenterX - flipperGap;
+        const rightPivotX = flipperCenterX + flipperGap;
 
-        // Plunger
+        this.leftFlipper = new Flipper(leftPivotX, flipperY, 'left');
+        this.rightFlipper = new Flipper(rightPivotX, flipperY, 'right');
+        this.leftFlipper.length = flipperLength;
+        this.rightFlipper.length = flipperLength;
+
+        // Flipper tip Y at rest = pivotY + sin(0.4)*length
+        const restSin = Math.sin(0.4);
+        const flipperTipY = flipperY + restSin * flipperLength;
+
+        // ---- Plunger ----
         const plungerX = pw + this.plungerLaneWidth / 2;
         this.plunger = new Plunger(plungerX, ph * 0.72, this.plungerLaneWidth * 0.6, CONFIG.PLUNGER_MAX);
-
-        // Ball start position (in plunger lane)
         this.ballStartX = plungerX;
         this.ballStartY = ph * 0.7;
 
-        // Drain zone
+        // ---- Drain ----
         this.drainY = ph + 30;
 
-        // Walls - outer boundaries
+        // ---- Walls ----
         this.walls = [];
 
         // Left wall
-        this.walls.push(new Wall(0, ph * 0.05, 0, ph * 0.82));
-        // Left drain guide
-        this.walls.push(new Wall(0, ph * 0.82, flipperCenterX - flipperGap - 10, flipperY + 5));
+        this.walls.push(new Wall(0, ph * 0.05, 0, ph * 0.78));
+        // Left drain guide: feeds ball onto left flipper surface
+        // End point at flipper pivot minus a small offset, at the flipper tip Y level
+        this.walls.push(new Wall(0, ph * 0.78, leftPivotX - 3, flipperTipY));
 
         // Right wall (starts below plunger lane entry gap)
-        this.walls.push(new Wall(pw, ph * 0.15, pw, ph * 0.82));
-        // Right drain guide
-        this.walls.push(new Wall(pw, ph * 0.82, flipperCenterX + flipperGap + 10, flipperY + 5));
+        this.walls.push(new Wall(pw, ph * 0.15, pw, ph * 0.78));
+        // Right drain guide: feeds ball onto right flipper surface
+        this.walls.push(new Wall(pw, ph * 0.78, rightPivotX + 3, flipperTipY));
 
         // Top wall (arched)
         this.walls.push(new Wall(0, ph * 0.05, pw * 0.3, ph * 0.02));
@@ -883,38 +902,36 @@ class Table {
         this.walls.push(new Wall(pw + this.plungerLaneWidth, ph * 0.08, pw + this.plungerLaneWidth, ph));
 
         // Inner guide rails
-        // Upper left guide
         this.walls.push(new Wall(pw * 0.08, ph * 0.2, pw * 0.18, ph * 0.35));
-        // Upper right guide
         this.walls.push(new Wall(pw * 0.92, ph * 0.2, pw * 0.82, ph * 0.35));
 
-        // Gear bumpers
+        // ---- Gear bumpers ----
         this.gearBumpers = [];
-        // Main gear cluster (center-top area)
         this.gearBumpers.push(new GearBumper(pw * 0.35, ph * 0.22, pw * 0.055, 500, 10));
         this.gearBumpers.push(new GearBumper(pw * 0.65, ph * 0.22, pw * 0.055, 500, 10));
         this.gearBumpers.push(new GearBumper(pw * 0.5, ph * 0.16, pw * 0.065, 1000, 12));
-
-        // Mid-field gears
         this.gearBumpers.push(new GearBumper(pw * 0.25, ph * 0.42, pw * 0.04, 250, 8));
         this.gearBumpers.push(new GearBumper(pw * 0.75, ph * 0.42, pw * 0.04, 250, 8));
 
-        // Slingshots (above flippers)
+        // ---- Slingshots (positioned relative to flipper pivots) ----
         this.slingshots = [];
-        // Left slingshot
+        // Left slingshot: triangle sitting above-left of left flipper
+        const slingshotInset = pw * 0.1;
+        const slingshotTop = ph * 0.72;
+        const slingshotBot = ph * 0.78;
         this.slingshots.push(new Slingshot(
-            pw * 0.1, ph * 0.72,
-            pw * 0.1, ph * 0.82,
-            pw * 0.22, ph * 0.8
+            slingshotInset, slingshotTop,
+            slingshotInset, slingshotBot,
+            leftPivotX - 10, slingshotBot
         ));
         // Right slingshot
         this.slingshots.push(new Slingshot(
-            pw * 0.9, ph * 0.72,
-            pw * 0.9, ph * 0.82,
-            pw * 0.78, ph * 0.8
+            pw - slingshotInset, slingshotTop,
+            pw - slingshotInset, slingshotBot,
+            rightPivotX + 10, slingshotBot
         ));
 
-        // Drop targets (machine tools)
+        // ---- Drop targets ----
         this.dropTargets = [];
         const targetW = pw * 0.08;
         const targetH = 14;
@@ -942,10 +959,6 @@ class Table {
                 targetW, targetH, latheLabels[i], 200
             ));
         }
-
-        // Kickback walls (save ball)
-        this.walls.push(new Wall(pw * 0.04, ph * 0.75, pw * 0.04, ph * 0.85));
-        this.walls.push(new Wall(pw * 0.96, ph * 0.75, pw * 0.96, ph * 0.85));
     }
 
     drawBackground(ctx) {
