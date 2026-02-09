@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Machine Shop Pinball</title>
+    <link rel="stylesheet" href="pinball.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <a href="index.html" class="back-btn">&larr; Back</a>
+            <h1>Machine Shop Pinball</h1>
+            <div class="pinball-preview">&#9881;</div>
+            <p>Launch the ball bearing and rack up points!</p>
+            <p class="hint">Tap left/right to flip &bull; Pull plunger to launch</p>
+            <button id="start-btn" class="game-btn">START GAME</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>SHIFT OVER!</h1>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p>Best: <span id="high-score">0</span></p>
+            <button id="restart-btn" class="game-btn">PLAY AGAIN</button>
+            <a href="index.html" class="back-link">&larr; Back to Menu</a>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="score-display">0</div>
+            <div id="balls-display">&#9899; &#9899; &#9899;</div>
+        </div>
+    </div>
+
+    <script src="pinball.js"></script>
+</body>
+</html>

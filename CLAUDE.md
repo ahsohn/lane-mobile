@@ -34,6 +34,9 @@ lane-mobile/
 ├── ant.html        # Ant Surfer game
 ├── ant.css
 ├── ant.js
+├── pinball.html    # Machine Shop Pinball game
+├── pinball.css
+├── pinball.js
 └── CLAUDE.md       # This file
 ```
 
@@ -76,6 +79,19 @@ lane-mobile/
 - Swipe left/right to switch lanes, swipe up or tap to jump
 - Arrow keys / WASD / Space for desktop
 - High scores saved to localStorage (`antSurferHighScore`)
+
+### Machine Shop Pinball
+- Classic pinball game with machine shop / industrial theme
+- Ball: Chrome ball bearing with physics (gravity, bouncing, friction)
+- Flippers: Left/right flippers controlled by tapping screen halves or arrow keys
+- Bumpers: Spinning gear bumpers with teeth (250-1000 points)
+- Drop targets: "DRILL" bank (5 targets) and "LATHE" bank (5 targets)
+- Completing a word bank awards 5000 bonus + score multiplier
+- Slingshots above flippers for extra bounce
+- Spring plunger launcher (pull back to charge, release to launch)
+- 3 balls per game
+- Controls: Touch left/right halves for flippers, drag plunger; Arrow keys / A,D + Space on desktop
+- High scores saved to localStorage (`machineShopPinballHighScore`)
 
 ## Deployment
 
