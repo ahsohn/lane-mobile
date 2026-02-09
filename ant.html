@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Ant Surfer</title>
+    <link rel="stylesheet" href="ant.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <a href="index.html" class="back-btn">&larr; Back</a>
+            <h1>Ant Surfer</h1>
+            <div class="ant-preview">&#128028;</div>
+            <p>Surf on slithering snakes through the garden!</p>
+            <p class="hint">Swipe left/right to switch lanes, swipe up to jump!</p>
+            <button id="start-btn" class="game-btn">START SURFING</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>SQUISHED!</h1>
+            <p>Score: <span id="final-score">0</span></p>
+            <p>Best: <span id="high-score">0</span></p>
+            <button id="restart-btn" class="game-btn">SURF AGAIN</button>
+            <a href="index.html" class="back-link">&larr; Back to Menu</a>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="score-display">0</div>
+            <div id="collectible-display">&#127852; 0</div>
+        </div>
+    </div>
+
+    <script src="ant.js"></script>
+</body>
+</html>

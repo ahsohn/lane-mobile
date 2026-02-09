@@ -31,6 +31,9 @@ lane-mobile/
 ├── pacman.html     # Lemon Chomper game
 ├── pacman.css
 ├── pacman.js
+├── ant.html        # Ant Surfer game
+├── ant.css
+├── ant.js
 └── CLAUDE.md       # This file
 ```
 
@@ -62,6 +65,17 @@ lane-mobile/
 - Enemies: Hungry cats with different behaviors
 - D-pad and swipe controls
 - High scores saved to localStorage (`lemonChomperHighScore`)
+
+### Ant Surfer
+- Subway Surfers style 3-lane endless runner
+- Player: An ant surfing on slithering snakes
+- 3 snake lanes with animated slithering bodies
+- Obstacles: rocks, twigs, mushrooms, beetles, spider webs, bird shadows
+- Collectibles: sugar cubes, breadcrumbs, honeydew drops
+- Power-ups: Shield (absorbs one hit), Magnet (attracts collectibles)
+- Swipe left/right to switch lanes, swipe up or tap to jump
+- Arrow keys / WASD / Space for desktop
+- High scores saved to localStorage (`antSurferHighScore`)
 
 ## Deployment
 

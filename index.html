@@ -201,6 +201,10 @@
             animation-delay: 1.5s;
         }
 
+        .game-card:nth-child(5) .game-icon {
+            animation-delay: 2s;
+        }
+
         /* Pacman card theme */
         .game-card.pacman {
             border-color: rgba(255, 204, 0, 0.3);
@@ -217,6 +221,24 @@
 
         .game-card.pacman:hover .play-btn {
             box-shadow: 0 5px 20px rgba(255, 204, 0, 0.4);
+        }
+
+        /* Ant card theme */
+        .game-card.ant {
+            border-color: rgba(76, 175, 80, 0.3);
+        }
+
+        .game-card.ant:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 20px 40px rgba(76, 175, 80, 0.2);
+        }
+
+        .game-card.ant .play-btn {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        }
+
+        .game-card.ant:hover .play-btn {
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
         }
 
         /* Coming soon card */
@@ -334,11 +356,18 @@
                 <p>Help Polly the Parrot collect all the lemons while avoiding the hungry cats in this maze adventure!</p>
                 <span class="play-btn">Play Now</span>
             </a>
+
+            <a href="ant.html" class="game-card ant">
+                <span class="game-icon">🐜</span>
+                <h2>Ant Surfer</h2>
+                <p>Surf on slithering snakes through the garden! Dodge obstacles, collect treats, and ride the serpents!</p>
+                <span class="play-btn">Play Now</span>
+            </a>
         </div>
 
         <footer>
             <p>Tap a game to play. Works best on mobile devices.</p>
-            <p class="version">v2.0.0</p>
+            <p class="version">v3.0.0</p>
         </footer>
     </div>
 
