@@ -33,6 +33,10 @@ const CONFIG = {
     BRICK_SCORE: 10,
     POWERUP_SCORE: 50,
     ALL_CLEAR_BONUS: 2000,
+    // Breaker trigger: every BREAKER_SCORE_INTERVAL points triggers breaker
+    // Tetris (4 lines) triggers it immediately regardless of score
+    BREAKER_SCORE_INTERVAL: 3000,
+    BREAKER_TIME_LIMIT: 30000, // 30 seconds
     // Flip
     FLIP_DURATION: 1200,
     // Touch
@@ -320,6 +324,12 @@ let breakerOffsetX = 0;
 let breakerOffsetY = 0;
 let bricksRemaining = 0;
 
+// Breaker timer & score trigger
+let breakerStartTime = 0;
+let breakerTimeRemaining = 0;
+let nextBreakerScoreThreshold = CONFIG.BREAKER_SCORE_INTERVAL;
+let ballsLost = false;
+
 // Flip animation
 let flipProgress = 0;
 let flipDirection = 0; // 1 = to breaker, -1 = to tetris
@@ -407,6 +417,10 @@ function resetGame() {
     powerups = [];
     activePowerups = {};
     stickyBall = null;
+    nextBreakerScoreThreshold = CONFIG.BREAKER_SCORE_INTERVAL;
+    ballsLost = false;
+    breakerStartTime = 0;
+    breakerTimeRemaining = 0;
     state = 'TETRIS';
     updateHUD();
     hudEl.classList.remove('hidden');
@@ -608,11 +622,17 @@ function checkLineClears() {
             clearingLines = [];
             animating = false;
 
-            // Check if it was a Tetris (4 lines)
-            if (lines.length === 4) {
-                audio.tetris();
+            // Tetris (4 lines) = immediate flip to breaker
+            // Otherwise, check if score crossed the next threshold
+            const shouldFlip = lines.length === 4 || score >= nextBreakerScoreThreshold;
+            if (shouldFlip && hasBlocksOnGrid()) {
+                if (lines.length === 4) audio.tetris();
+                nextBreakerScoreThreshold = score + CONFIG.BREAKER_SCORE_INTERVAL;
                 startFlipToBreaker();
             } else {
+                if (score >= nextBreakerScoreThreshold) {
+                    nextBreakerScoreThreshold = score + CONFIG.BREAKER_SCORE_INTERVAL;
+                }
                 spawnPiece();
             }
         }, clearAnimDuration);
@@ -623,6 +643,15 @@ function checkLineClears() {
 
 function getDropInterval() {
     return Math.max(CONFIG.MIN_DROP_INTERVAL, CONFIG.BASE_DROP_INTERVAL - (level - 1) * CONFIG.SPEED_DECREASE_PER_LEVEL);
+}
+
+function hasBlocksOnGrid() {
+    for (let r = 0; r < CONFIG.ROWS; r++) {
+        for (let c = 0; c < CONFIG.COLS; c++) {
+            if (grid[r][c]) return true;
+        }
+    }
+    return false;
 }
 
 function updateTetris(dt) {
@@ -812,7 +841,7 @@ function drawNextPiece() {
 // BRICK BREAKER LOGIC
 // ============================================================
 function calcBreakerLayout() {
-    // Find the bounds of the breaker grid (only rows with bricks)
+    // Find the bounding box of rows that actually have bricks
     let topRow = breakerRows, bottomRow = 0;
     for (let r = 0; r < breakerRows; r++) {
         for (let c = 0; c < breakerCols; c++) {
@@ -822,16 +851,21 @@ function calcBreakerLayout() {
             }
         }
     }
+    if (topRow > bottomRow) { topRow = 0; bottomRow = 0; }
 
-    // Cell size: fit the grid on screen with room for paddle
+    // Only size based on rows that have bricks, with some padding
+    const brickRowCount = bottomRow - topRow + 1;
+    const paddleArea = 80; // space for paddle at bottom
+    const topMargin = 50; // space for HUD at top
+
     const availW = canvasW * 0.95;
-    const availH = canvasH * 0.65; // leave room for paddle area
-    const cs = Math.floor(Math.min(availW / breakerCols, availH / breakerRows));
-    breakerCellSize = Math.max(cs, 8);
+    const availH = canvasH - paddleArea - topMargin;
+    const cs = Math.floor(Math.min(availW / breakerCols, availH / brickRowCount));
+    breakerCellSize = Math.max(cs, 10);
     const totalW = breakerCols * breakerCellSize;
-    const totalH = breakerRows * breakerCellSize;
     breakerOffsetX = Math.floor((canvasW - totalW) / 2);
-    breakerOffsetY = Math.floor(40); // top margin
+    // Position so bricks start at the top margin, shifted by topRow
+    breakerOffsetY = topMargin - topRow * breakerCellSize;
 
     // Paddle
     paddle.baseWidth = Math.floor(canvasW * CONFIG.PADDLE_WIDTH_RATIO);
@@ -890,6 +924,15 @@ function launchBall() {
     });
 }
 
+function releaseStickyBall() {
+    if (!stickyBall) return;
+    const speed = CONFIG.BALL_SPEED;
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4;
+    stickyBall.vx = Math.cos(angle) * speed;
+    stickyBall.vy = Math.sin(angle) * speed;
+    stickyBall = null;
+}
+
 function updateBreaker(dt) {
     const now = performance.now();
 
@@ -906,7 +949,14 @@ function updateBreaker(dt) {
     }
     if (activePowerups.sticky && now > activePowerups.sticky) {
         delete activePowerups.sticky;
-        stickyBall = null;
+        // Release any stuck ball with velocity
+        if (stickyBall) {
+            const speed = CONFIG.BALL_SPEED;
+            const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4;
+            stickyBall.vx = Math.cos(angle) * speed;
+            stickyBall.vy = Math.sin(angle) * speed;
+            stickyBall = null;
+        }
     }
 
     // Move sticky ball with paddle
@@ -951,8 +1001,10 @@ function updateBreaker(dt) {
             ball.x <= paddle.x + paddle.width / 2) {
 
             // Angle based on where it hit the paddle
+            // hitPos: 0 = left edge, 1 = right edge
             const hitPos = (ball.x - (paddle.x - paddle.width / 2)) / paddle.width; // 0-1
-            const angle = -Math.PI * (0.15 + hitPos * 0.7); // -165 to -15 degrees
+            // Left edge -> ball goes left (angle ~150deg), right edge -> ball goes right (angle ~30deg)
+            const angle = -Math.PI + (Math.PI * 0.17) + hitPos * (Math.PI * 0.66); // ~-150 to ~-30 degrees
             const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
             ball.vx = Math.cos(angle) * speed;
             ball.vy = Math.sin(angle) * speed;
@@ -978,9 +1030,19 @@ function updateBreaker(dt) {
         checkBrickCollision(ball, isFire);
     }
 
-    // If no balls left, relaunch
+    // If no balls left, breaker round is over -> convert back to tetris
     if (balls.length === 0 && !stickyBall) {
-        launchBall();
+        floatingTexts.add(canvasW / 2, canvasH / 2, 'BALL LOST!', '#ef5350', 24);
+        startFlipToTetris();
+        return;
+    }
+
+    // 30s time limit
+    breakerTimeRemaining = Math.max(0, CONFIG.BREAKER_TIME_LIMIT - (performance.now() - breakerStartTime));
+    if (breakerTimeRemaining <= 0) {
+        floatingTexts.add(canvasW / 2, canvasH / 2, 'TIME UP!', '#ffeb3b', 24);
+        startFlipToTetris();
+        return;
     }
 
     // Update falling powerups
@@ -1180,11 +1242,18 @@ function drawBreakerGrid() {
         }
     }
 
-    // Border around brick area
-    ctx.strokeStyle = 'rgba(224, 64, 251, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(breakerOffsetX, breakerOffsetY,
-        breakerCols * breakerCellSize, breakerRows * breakerCellSize);
+    // Draw timer bar at top
+    if (state === 'BREAKER') {
+        const barWidth = canvasW * 0.8;
+        const barX = (canvasW - barWidth) / 2;
+        const barY = 38;
+        const pct = breakerTimeRemaining / CONFIG.BREAKER_TIME_LIMIT;
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(barX, barY, barWidth, 4);
+        const color = pct > 0.3 ? '#e040fb' : '#ef5350';
+        ctx.fillStyle = color;
+        ctx.fillRect(barX, barY, barWidth * pct, 4);
+    }
 }
 
 function drawPaddle() {
@@ -1297,6 +1366,52 @@ function startFlipToBreaker() {
 
     // Prepare breaker grid from tetris grid
     convertToBreakerGrid();
+    breakerStartTime = performance.now() + CONFIG.FLIP_DURATION; // timer starts after flip
+}
+
+function convertBreakerBackToTetris() {
+    // Convert remaining breaker bricks back into tetris grid
+    // Each 2x2 breaker block maps to 1 tetris cell
+    // We sample: if any brick in the 2x2 exists, that tetris cell is filled
+    initGrid();
+    for (let r = 0; r < CONFIG.ROWS; r++) {
+        for (let c = 0; c < CONFIG.COLS; c++) {
+            // Check the 2x2 breaker cells
+            let found = null;
+            for (let dr = 0; dr < 2; dr++) {
+                for (let dc = 0; dc < 2; dc++) {
+                    const br = r * 2 + dr;
+                    const bc = c * 2 + dc;
+                    if (br < breakerRows && bc < breakerCols && breakerGrid[br] && breakerGrid[br][bc]) {
+                        found = breakerGrid[br][bc];
+                    }
+                }
+            }
+            if (found) {
+                grid[r][c] = {
+                    type: EMOJIS.indexOf(found.emoji),
+                    color: found.color,
+                    emoji: found.emoji,
+                };
+            }
+        }
+    }
+
+    // Apply gravity: drop all blocks to the bottom
+    for (let c = 0; c < CONFIG.COLS; c++) {
+        // Collect non-null cells from bottom to top
+        const cells = [];
+        for (let r = CONFIG.ROWS - 1; r >= 0; r--) {
+            if (grid[r][c]) cells.push(grid[r][c]);
+        }
+        // Place them at the bottom
+        for (let r = 0; r < CONFIG.ROWS; r++) {
+            grid[r][c] = null;
+        }
+        for (let i = 0; i < cells.length; i++) {
+            grid[CONFIG.ROWS - 1 - i][c] = cells[i];
+        }
+    }
 }
 
 function startFlipToTetris() {
@@ -1308,6 +1423,9 @@ function startFlipToTetris() {
     powerups = [];
     activePowerups = {};
     stickyBall = null;
+
+    // Convert remaining bricks back to tetris with gravity
+    convertBreakerBackToTetris();
 }
 
 function updateFlip(dt) {
@@ -1322,11 +1440,10 @@ function updateFlip(dt) {
             linesDisplay.textContent = `Bricks: ${bricksRemaining}`;
             launchBall();
         } else {
-            // Back to tetris
+            // Back to tetris - grid was already set by convertBreakerBackToTetris
             state = 'TETRIS';
             round++;
             level++;
-            initGrid();
             nextPieceType = randomPieceType();
             spawnPiece();
             modeDisplay.textContent = `TETRIS R${round}`;
@@ -1355,16 +1472,24 @@ function drawFlipTransition() {
     ctx.translate(0, -centerY);
 
     if (progress < 0.5) {
-        // Show tetris side (shrinking)
-        drawTetrisGrid();
-        drawPlacedBlocks();
+        // Show current side (shrinking)
+        if (flipDirection === 1) {
+            drawTetrisGrid();
+            drawPlacedBlocks();
+        } else {
+            drawBreakerGrid();
+        }
     } else {
-        // Show breaker side (growing)
-        // Flip vertically since we're past the midpoint
+        // Show target side (growing)
         ctx.translate(0, centerY);
         ctx.scale(1, -1);
         ctx.translate(0, -centerY);
-        drawBreakerGrid();
+        if (flipDirection === 1) {
+            drawBreakerGrid();
+        } else {
+            drawTetrisGrid();
+            drawPlacedBlocks();
+        }
     }
 
     ctx.restore();
@@ -1383,13 +1508,13 @@ function drawFlipTransition() {
     ctx.textAlign = 'center';
     ctx.globalAlpha = Math.sin(progress * Math.PI);
     if (flipDirection === 1) {
-        ctx.fillText('TETRIS!', canvasW / 2, canvasH / 2 - 20);
+        ctx.fillText('BREAK IT!', canvasW / 2, canvasH / 2 - 20);
         ctx.font = 'bold 18px Arial';
         ctx.fillText('Flipping to Breaker...', canvasW / 2, canvasH / 2 + 20);
     } else {
-        ctx.fillText('CLEARED!', canvasW / 2, canvasH / 2 - 20);
+        ctx.fillText('BACK TO TETRIS!', canvasW / 2, canvasH / 2 - 20);
         ctx.font = 'bold 18px Arial';
-        ctx.fillText(`Round ${round + 1} Starting...`, canvasW / 2, canvasH / 2 + 20);
+        ctx.fillText(`Round ${round + 1}`, canvasW / 2, canvasH / 2 + 20);
     }
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -1403,7 +1528,10 @@ function updateHUD() {
     levelDisplay.textContent = `Lv ${level}`;
     if (state === 'TETRIS' || state === 'FLIPPING_TO_BREAKER') {
         linesDisplay.textContent = `Lines: ${totalLines}`;
-    } else if (state === 'BREAKER' || state === 'FLIPPING_TO_TETRIS') {
+    } else if (state === 'BREAKER') {
+        const secs = Math.ceil(breakerTimeRemaining / 1000);
+        linesDisplay.textContent = `Bricks: ${bricksRemaining}  ⏱${secs}s`;
+    } else if (state === 'FLIPPING_TO_TETRIS') {
         linesDisplay.textContent = `Bricks: ${bricksRemaining}`;
     }
 }
@@ -1442,14 +1570,8 @@ function handleTouchStart(e) {
 
     if (state === 'BREAKER') {
         paddle.x = touch.clientX;
-        // Release sticky ball on tap
-        if (stickyBall) {
-            const speed = CONFIG.BALL_SPEED;
-            const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4;
-            stickyBall.vx = Math.cos(angle) * speed;
-            stickyBall.vy = Math.sin(angle) * speed;
-            stickyBall = null;
-        }
+        paddle.x = Math.max(paddle.width / 2, Math.min(canvasW - paddle.width / 2, paddle.x));
+        releaseStickyBall();
     }
 }
 
@@ -1551,13 +1673,7 @@ function handleKeyDown(e) {
                 break;
             case ' ':
                 e.preventDefault();
-                if (stickyBall) {
-                    const speed = CONFIG.BALL_SPEED;
-                    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4;
-                    stickyBall.vx = Math.cos(angle) * speed;
-                    stickyBall.vy = Math.sin(angle) * speed;
-                    stickyBall = null;
-                }
+                releaseStickyBall();
                 break;
         }
     }
