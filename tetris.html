@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Emoji Tetris</title>
+    <link rel="stylesheet" href="tetris.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <a href="index.html" class="back-btn">&larr; Back</a>
+            <h1>Emoji Tetris</h1>
+            <div class="tetris-preview">🧱</div>
+            <p>Stack emoji blocks and clear lines!</p>
+            <p class="hint">Score a Tetris (4 lines) to flip into Brick Breaker!</p>
+            <button id="start-btn" class="game-btn">START GAME</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>GAME OVER</h1>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p>Best: <span id="high-score">0</span></p>
+            <p>Round: <span id="final-round">1</span></p>
+            <button id="restart-btn" class="game-btn">PLAY AGAIN</button>
+            <a href="index.html" class="back-link">&larr; Back to Menu</a>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="score-display">0</div>
+            <div id="mode-display">TETRIS</div>
+            <div id="level-display">Lv 1</div>
+        </div>
+
+        <!-- Next piece preview -->
+        <div id="next-piece" class="hidden">
+            <div class="next-label">NEXT</div>
+            <canvas id="nextCanvas" width="100" height="100"></canvas>
+        </div>
+
+        <!-- Lines / Bricks info -->
+        <div id="info-display" class="hidden">
+            <span id="lines-display">Lines: 0</span>
+        </div>
+    </div>
+
+    <script src="tetris.js"></script>
+</body>
+</html>
