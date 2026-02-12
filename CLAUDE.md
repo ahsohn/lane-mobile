@@ -37,6 +37,9 @@ lane-mobile/
 ├── pinball.html    # Machine Shop Pinball game
 ├── pinball.css
 ├── pinball.js
+├── tetris.html     # Emoji Tetris game
+├── tetris.css
+├── tetris.js
 └── CLAUDE.md       # This file
 ```
 
@@ -92,6 +95,19 @@ lane-mobile/
 - 3 balls per game
 - Controls: Touch left/right halves for flippers, drag plunger; Arrow keys / A,D + Space on desktop
 - High scores saved to localStorage (`machineShopPinballHighScore`)
+
+### Emoji Tetris
+- Hybrid Tetris / Brick Breaker game
+- Tetris side: standard 10x20 grid with emoji blocks (7 tetrominoes)
+- Each piece type uses a different emoji: I=🟦, O=🟨, T=🟪, S=🟩, Z=🟥, J=🔵, L=🟧
+- SRS rotation with wall kicks, ghost piece, next piece preview
+- Score a Tetris (4 lines cleared at once) to flip into Brick Breaker mode
+- Flip transition: 3D flip animation, each Tetris block becomes 2x2 bricks
+- Brick Breaker side: paddle + ball, destroy all bricks to flip back to Tetris
+- Power-ups in bricks: Multi-ball (⚡), Wide Paddle (↔️), Fireball (🔥), Slow Ball (🐢), Score Bonus (💎), Sticky Paddle (🧲)
+- Controls: Swipe/tap on mobile; Arrow keys / WASD + Space on desktop
+- Game over only on Tetris side (blocks reach top)
+- High scores saved to localStorage (`emojiTetrisHighScore`)
 
 ## Deployment
 

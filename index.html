@@ -263,6 +263,28 @@
             box-shadow: 0 5px 20px rgba(255, 143, 0, 0.4);
         }
 
+        /* Tetris card theme */
+        .game-card.tetris {
+            border-color: rgba(224, 64, 251, 0.3);
+        }
+
+        .game-card.tetris:hover {
+            border-color: #e040fb;
+            box-shadow: 0 20px 40px rgba(224, 64, 251, 0.2);
+        }
+
+        .game-card.tetris .play-btn {
+            background: linear-gradient(135deg, #e040fb, #9c27b0);
+        }
+
+        .game-card.tetris:hover .play-btn {
+            box-shadow: 0 5px 20px rgba(224, 64, 251, 0.4);
+        }
+
+        .game-card:nth-child(7) .game-icon {
+            animation-delay: 3s;
+        }
+
         /* Coming soon card */
         .game-card.coming-soon {
             opacity: 0.5;
@@ -392,11 +414,18 @@
                 <p>Launch the ball bearing into spinning gears, hit drop targets, and rack up bonus multipliers!</p>
                 <span class="play-btn">Play Now</span>
             </a>
+
+            <a href="tetris.html" class="game-card tetris">
+                <span class="game-icon">🧱</span>
+                <h2>Emoji Tetris</h2>
+                <p>Stack emoji blocks, clear lines, and score a Tetris to flip into Brick Breaker mode!</p>
+                <span class="play-btn">Play Now</span>
+            </a>
         </div>
 
         <footer>
             <p>Tap a game to play. Works best on mobile devices.</p>
-            <p class="version">v4.0.1</p>
+            <p class="version">v5.0.0</p>
         </footer>
     </div>
 
