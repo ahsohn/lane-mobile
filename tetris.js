@@ -327,6 +327,7 @@ let bricksRemaining = 0;
 // Breaker timer & score trigger
 let breakerStartTime = 0;
 let breakerTimeRemaining = 0;
+let breakerCountdown = 0; // ms remaining before ball starts moving
 let nextBreakerScoreThreshold = CONFIG.BREAKER_SCORE_INTERVAL;
 let ballsLost = false;
 
@@ -936,6 +937,33 @@ function releaseStickyBall() {
 function updateBreaker(dt) {
     const now = performance.now();
 
+    // Countdown before ball starts moving
+    if (breakerCountdown > 0) {
+        breakerCountdown -= dt;
+        if (breakerCountdown <= 0) {
+            breakerCountdown = 0;
+            // Launch the ball that's sitting on the paddle
+            for (const ball of balls) {
+                if (ball.vx === 0 && ball.vy === 0) {
+                    const speed = CONFIG.BALL_SPEED;
+                    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6;
+                    ball.vx = Math.cos(angle) * speed;
+                    ball.vy = Math.sin(angle) * speed;
+                }
+            }
+        } else {
+            // Keep ball on paddle during countdown
+            for (const ball of balls) {
+                if (ball.vx === 0 && ball.vy === 0) {
+                    ball.x = paddle.x;
+                    ball.y = paddle.y - CONFIG.BALL_RADIUS - 2;
+                }
+            }
+            updateHUD();
+            return; // Skip all other breaker logic during countdown
+        }
+    }
+
     // Update active powerup timers
     if (activePowerups.wide && now > activePowerups.wide) {
         delete activePowerups.wide;
@@ -1366,7 +1394,8 @@ function startFlipToBreaker() {
 
     // Prepare breaker grid from tetris grid
     convertToBreakerGrid();
-    breakerStartTime = performance.now() + CONFIG.FLIP_DURATION; // timer starts after flip
+    // Timer starts after flip + 2s countdown
+    breakerStartTime = performance.now() + CONFIG.FLIP_DURATION + 2000;
 }
 
 function convertBreakerBackToTetris() {
@@ -1433,12 +1462,19 @@ function updateFlip(dt) {
     if (flipProgress >= 1) {
         flipProgress = 1;
         if (flipDirection === 1) {
-            // Now in breaker mode
+            // Now in breaker mode with a 2s countdown before ball moves
             state = 'BREAKER';
             modeDisplay.textContent = 'BREAKER';
             modeDisplay.style.background = 'rgba(255, 87, 34, 0.4)';
             linesDisplay.textContent = `Bricks: ${bricksRemaining}`;
-            launchBall();
+            breakerCountdown = 2000;
+            // Place ball on paddle but don't give it velocity yet
+            balls.push({
+                x: paddle.x,
+                y: paddle.y - CONFIG.BALL_RADIUS - 2,
+                vx: 0,
+                vy: 0,
+            });
         } else {
             // Back to tetris - grid was already set by convertBreakerBackToTetris
             state = 'TETRIS';
@@ -1722,6 +1758,20 @@ function gameLoop(timestamp) {
         drawBalls();
         drawPowerupDrops();
         drawActivePowerupIndicators();
+        // Draw countdown overlay
+        if (breakerCountdown > 0) {
+            const secs = Math.ceil(breakerCountdown / 1000);
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fillRect(0, 0, canvasW, canvasH);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(secs, canvasW / 2, canvasH / 2 - 20);
+            ctx.font = 'bold 18px Arial';
+            ctx.fillStyle = '#e040fb';
+            ctx.fillText('GET READY', canvasW / 2, canvasH / 2 + 25);
+        }
     } else if (state === 'FLIPPING_TO_BREAKER' || state === 'FLIPPING_TO_TETRIS') {
         updateFlip(dt);
         drawFlipTransition();
