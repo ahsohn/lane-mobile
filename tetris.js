@@ -37,6 +37,7 @@ const CONFIG = {
     // Tetris (4 lines) triggers it immediately regardless of score
     BREAKER_SCORE_INTERVAL: 3000,
     BREAKER_TIME_LIMIT: 30000, // 30 seconds
+    BREAKER_TIME_PER_BRICK: 300, // ms added per brick broken
     // Flip
     FLIP_DURATION: 1200,
     // Touch
@@ -929,10 +930,12 @@ function convertToBreakerGrid() {
         for (let c = 0; c < CONFIG.COLS; c++) {
             if (grid[r][c]) {
                 const cell = grid[r][c];
+                // Flip vertically: bottom tetris row -> top breaker row
+                const flippedR = CONFIG.ROWS - 1 - r;
                 // Fill 2x2
                 for (let dr = 0; dr < 2; dr++) {
                     for (let dc = 0; dc < 2; dc++) {
-                        const br = r * 2 + dr;
+                        const br = flippedR * 2 + dr;
                         const bc = c * 2 + dc;
                         let powerup = null;
                         if (Math.random() < CONFIG.POWERUP_CHANCE) {
@@ -1219,6 +1222,8 @@ function destroyBrick(r, c) {
     breakerGrid[r][c] = null;
     bricksRemaining--;
     score += CONFIG.BRICK_SCORE;
+    // Add time for each brick broken
+    breakerStartTime += CONFIG.BREAKER_TIME_PER_BRICK;
     audio.brickBreak();
 }
 
