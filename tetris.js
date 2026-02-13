@@ -18,7 +18,7 @@ const CONFIG = {
     SCORE_3_LINES: 500,
     SCORE_4_LINES: 800,
     // Brick breaker
-    BALL_SPEED: 200, // pixels per second (dt-normalized)
+    BALL_SPEED: 350, // pixels per second (dt-normalized)
     BALL_RADIUS: 6,
     PADDLE_HEIGHT: 12,
     PADDLE_WIDTH_RATIO: 0.2,
@@ -1176,7 +1176,7 @@ function checkBrickCollision(ball, isFire) {
                 destroyBrick(r, c);
 
                 if (!isFire) {
-                    // Reflect
+                    // Reflect based on which face was hit
                     const brickCenterX = brickX + breakerCellSize / 2;
                     const brickCenterY = brickY + breakerCellSize / 2;
                     const dx = ball.x - brickCenterX;
@@ -1187,9 +1187,10 @@ function checkBrickCollision(ball, isFire) {
                     } else {
                         ball.vy = -ball.vy;
                     }
-                    // Push ball out
-                    ball.x += ball.vx * 2;
-                    ball.y += ball.vy * 2;
+                    // Nudge ball out of brick by a small fixed amount
+                    const nudge = CONFIG.BALL_RADIUS + 1;
+                    ball.x += Math.sign(ball.vx) * nudge;
+                    ball.y += Math.sign(ball.vy) * nudge;
                     return; // One collision per frame for non-fire
                 }
             }
