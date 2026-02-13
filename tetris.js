@@ -18,7 +18,7 @@ const CONFIG = {
     SCORE_3_LINES: 500,
     SCORE_4_LINES: 800,
     // Brick breaker
-    BALL_SPEED: 5,
+    BALL_SPEED: 200, // pixels per second (dt-normalized)
     BALL_RADIUS: 6,
     PADDLE_HEIGHT: 12,
     PADDLE_WIDTH_RATIO: 0.2,
@@ -1033,6 +1033,7 @@ function updateBreaker(dt) {
     }
 
     // Update balls
+    const dtSec = dt / 1000; // delta time in seconds
     const speedMult = activePowerups.slow ? CONFIG.SLOW_BALL_FACTOR : 1;
     const isFire = !!activePowerups.fire;
 
@@ -1040,8 +1041,8 @@ function updateBreaker(dt) {
         const ball = balls[i];
         if (ball === stickyBall) continue;
 
-        ball.x += ball.vx * speedMult;
-        ball.y += ball.vy * speedMult;
+        ball.x += ball.vx * speedMult * dtSec;
+        ball.y += ball.vy * speedMult * dtSec;
 
         // Wall bounces
         if (ball.x - CONFIG.BALL_RADIUS < 0) {
@@ -1529,6 +1530,35 @@ function updateFlip(dt) {
     }
 }
 
+function drawBreakerGridAtTetrisPos() {
+    // Draw breaker bricks at positions that match the tetris grid layout.
+    // Each tetris cell (cellSize) maps to a 2x2 breaker sub-cell (cellSize/2).
+    // This ensures a smooth visual transition during the flip.
+    const subCell = cellSize / 2;
+    for (let r = 0; r < breakerRows; r++) {
+        if (!breakerGrid[r]) continue;
+        for (let c = 0; c < breakerCols; c++) {
+            const brick = breakerGrid[r][c];
+            if (!brick) continue;
+            const x = gridOffsetX + c * subCell;
+            const y = gridOffsetY + r * subCell;
+
+            ctx.fillStyle = brick.color;
+            ctx.fillRect(x + 1, y + 1, subCell - 2, subCell - 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.fillRect(x + 1, y + 1, subCell - 2, 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(x + 1, y + subCell - 3, subCell - 2, 2);
+
+            const fontSize = Math.max(6, subCell * 0.5);
+            ctx.font = `${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(brick.emoji, x + subCell / 2, y + subCell / 2 + 1);
+        }
+    }
+}
+
 function drawFlipTransition() {
     // 3D flip effect using canvas transforms
     const progress = flipProgress;
@@ -1552,7 +1582,9 @@ function drawFlipTransition() {
             drawTetrisGrid();
             drawPlacedBlocks();
         } else {
-            drawBreakerGrid();
+            // Draw breaker bricks at tetris-relative position for smooth transition
+            drawTetrisGrid();
+            drawBreakerGridAtTetrisPos();
         }
     } else {
         // Show target side (growing)
@@ -1560,7 +1592,9 @@ function drawFlipTransition() {
         ctx.scale(1, -1);
         ctx.translate(0, -centerY);
         if (flipDirection === 1) {
-            drawBreakerGrid();
+            // Draw breaker bricks at tetris-relative position for smooth transition
+            drawTetrisGrid();
+            drawBreakerGridAtTetrisPos();
         } else {
             drawTetrisGrid();
             drawPlacedBlocks();
