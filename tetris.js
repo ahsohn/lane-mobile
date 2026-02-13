@@ -1447,15 +1447,16 @@ function startFlipToBreaker() {
 function convertBreakerBackToTetris() {
     // Convert remaining breaker bricks back into tetris grid
     // Each 2x2 breaker block maps to 1 tetris cell
-    // We sample: if any brick in the 2x2 exists, that tetris cell is filled
+    // Must flip rows back (breaker row 0 = tetris bottom, so invert again)
     initGrid();
     for (let r = 0; r < CONFIG.ROWS; r++) {
         for (let c = 0; c < CONFIG.COLS; c++) {
-            // Check the 2x2 breaker cells
+            // Flip row back: breaker was flipped when created, undo it
+            const flippedR = CONFIG.ROWS - 1 - r;
             let found = null;
             for (let dr = 0; dr < 2; dr++) {
                 for (let dc = 0; dc < 2; dc++) {
-                    const br = r * 2 + dr;
+                    const br = flippedR * 2 + dr;
                     const bc = c * 2 + dc;
                     if (br < breakerRows && bc < breakerCols && breakerGrid[br] && breakerGrid[br][bc]) {
                         found = breakerGrid[br][bc];
@@ -1474,12 +1475,10 @@ function convertBreakerBackToTetris() {
 
     // Apply gravity: drop all blocks to the bottom
     for (let c = 0; c < CONFIG.COLS; c++) {
-        // Collect non-null cells from bottom to top
         const cells = [];
         for (let r = CONFIG.ROWS - 1; r >= 0; r--) {
             if (grid[r][c]) cells.push(grid[r][c]);
         }
-        // Place them at the bottom
         for (let r = 0; r < CONFIG.ROWS; r++) {
             grid[r][c] = null;
         }
@@ -1526,6 +1525,8 @@ function updateFlip(dt) {
             state = 'TETRIS';
             round++;
             level++;
+            // Reset breaker progress bar to start fresh from current score
+            nextBreakerScoreThreshold = score + CONFIG.BREAKER_SCORE_INTERVAL;
             nextPieceType = randomPieceType();
             spawnPiece();
             modeDisplay.textContent = `TETRIS R${round}`;
