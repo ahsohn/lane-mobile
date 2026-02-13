@@ -347,6 +347,9 @@ let touchStartX = 0;
 let touchStartY = 0;
 let touchStartTime = 0;
 let touchId = null;
+let touchLastX = 0; // tracks last X for drag-to-move in tetris
+let touchDragCol = 0; // accumulated fractional column movement
+let touchIsDragging = false; // true once finger moves enough horizontally
 let moveRepeatTimer = 0;
 let moveDir = 0;
 let softDropping = false;
@@ -838,6 +841,42 @@ function drawNextPiece() {
     }
 }
 
+function drawBreakerProgressBar() {
+    // Show progress toward next breaker flip below the tetris grid
+    const gw = CONFIG.COLS * cellSize;
+    const barWidth = gw;
+    const barHeight = 6;
+    const barX = gridOffsetX;
+    const barY = gridOffsetY + CONFIG.ROWS * cellSize + 8;
+
+    // How far through the current interval
+    const prevThreshold = nextBreakerScoreThreshold - CONFIG.BREAKER_SCORE_INTERVAL;
+    const progress = Math.min(1, Math.max(0, (score - prevThreshold) / CONFIG.BREAKER_SCORE_INTERVAL));
+
+    // Background track
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth, barHeight, 3);
+    ctx.fill();
+
+    // Fill
+    if (progress > 0) {
+        const gradient = ctx.createLinearGradient(barX, barY, barX + barWidth * progress, barY);
+        gradient.addColorStop(0, '#e040fb');
+        gradient.addColorStop(1, '#ff5722');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, barWidth * progress, barHeight, 3);
+        ctx.fill();
+    }
+
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = 'bold 9px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('BREAKER', barX + barWidth / 2, barY + barHeight + 11);
+}
+
 // ============================================================
 // BRICK BREAKER LOGIC
 // ============================================================
@@ -872,7 +911,7 @@ function calcBreakerLayout() {
     paddle.baseWidth = Math.floor(canvasW * CONFIG.PADDLE_WIDTH_RATIO);
     paddle.width = paddle.baseWidth;
     paddle.x = canvasW / 2;
-    paddle.y = canvasH - 40;
+    paddle.y = canvasH - 80;
 }
 
 function convertToBreakerGrid() {
@@ -1603,6 +1642,9 @@ function handleTouchStart(e) {
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
     touchStartTime = performance.now();
+    touchLastX = touch.clientX;
+    touchDragCol = 0;
+    touchIsDragging = false;
 
     if (state === 'BREAKER') {
         paddle.x = touch.clientX;
@@ -1616,9 +1658,31 @@ function handleTouchMove(e) {
     const touch = Array.from(e.changedTouches).find(t => t.identifier === touchId);
     if (!touch) return;
 
-    if (state === 'BREAKER') {
+    if (state === 'TETRIS' && currentPiece && !animating) {
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+        // Start dragging once finger moves enough horizontally
+        if (!touchIsDragging && Math.abs(dx) > CONFIG.TAP_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+            touchIsDragging = true;
+            touchLastX = touch.clientX;
+            touchDragCol = 0;
+        }
+        if (touchIsDragging) {
+            const deltaX = touch.clientX - touchLastX;
+            touchDragCol += deltaX / cellSize;
+            // Move piece for each full cell crossed
+            while (touchDragCol >= 1) {
+                movePiece(1);
+                touchDragCol -= 1;
+            }
+            while (touchDragCol <= -1) {
+                movePiece(-1);
+                touchDragCol += 1;
+            }
+            touchLastX = touch.clientX;
+        }
+    } else if (state === 'BREAKER') {
         paddle.x = touch.clientX;
-        // Clamp paddle
         paddle.x = Math.max(paddle.width / 2, Math.min(canvasW - paddle.width / 2, paddle.x));
     }
 }
@@ -1631,6 +1695,14 @@ function handleTouchEnd(e) {
 
     if (state !== 'TETRIS') return;
 
+    // If we were dragging horizontally, don't also trigger a swipe
+    if (touchIsDragging) {
+        touchIsDragging = false;
+        moveDir = 0;
+        softDropping = false;
+        return;
+    }
+
     const dx = touch.clientX - touchStartX;
     const dy = touch.clientY - touchStartY;
     const elapsed = performance.now() - touchStartTime;
@@ -1641,15 +1713,12 @@ function handleTouchEnd(e) {
         // Tap = rotate
         rotatePiece();
     } else if (absDy > CONFIG.SWIPE_THRESHOLD && dy > 0 && absDy > absDx) {
-        // Swipe down = hard drop
+        // Swipe down
         if (absDy > CONFIG.SWIPE_THRESHOLD * 3) {
             hardDrop();
         } else {
             softDrop();
         }
-    } else if (absDx > CONFIG.SWIPE_THRESHOLD && absDx > absDy) {
-        // Swipe left/right = move
-        movePiece(dx > 0 ? 1 : -1);
     } else if (absDy > CONFIG.SWIPE_THRESHOLD && dy < 0 && absDy > absDx) {
         // Swipe up = hard drop
         hardDrop();
@@ -1746,6 +1815,7 @@ function gameLoop(timestamp) {
         drawPlacedBlocks();
         drawCurrentPiece();
         drawNextPiece();
+        drawBreakerProgressBar();
     } else if (state === 'BREAKER') {
         // Paddle movement with keys
         if (moveDir !== 0) {
