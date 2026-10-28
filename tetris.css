@@ -185,32 +185,55 @@ html, body {
                  -1px 1px 0 #000;
 }
 
-/* Next piece preview */
-#next-piece {
+/* Pause button */
+#pause-btn {
     position: absolute;
-    top: 50px;
+    bottom: 6px;
     right: 10px;
-    z-index: 50;
-    pointer-events: none;
-    text-align: center;
+    z-index: 60;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(224, 64, 251, 0.4);
+    border-radius: 50%;
+    cursor: pointer;
 }
 
-#next-piece.hidden {
+#pause-btn.hidden {
     display: none;
 }
 
-.next-label {
-    font-size: 0.7rem;
-    color: #888;
-    font-weight: bold;
-    letter-spacing: 2px;
-    margin-bottom: 4px;
+/* Controls help on start screen */
+.controls {
+    margin-top: 6px;
 }
 
-#nextCanvas {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(224, 64, 251, 0.3);
-    border-radius: 8px;
+.screen .controls p {
+    font-size: 0.8rem;
+    color: #bbb;
+    margin-bottom: 4px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.screen .controls b {
+    color: #e040fb;
+}
+
+.screen .controls .keys {
+    color: #888;
+    font-size: 0.7rem;
+}
+
+.screen .new-best {
+    color: #ffeb3b;
+    font-size: 1.2rem;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.screen .new-best.hidden {
+    display: none;
 }
 
 /* Info display */
@@ -265,6 +288,10 @@ html, body {
 /* Small screens */
 @media (max-height: 500px) {
     .tetris-preview {
+        display: none;
+    }
+
+    .controls {
         display: none;
     }
 }

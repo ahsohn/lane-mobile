@@ -18,7 +18,13 @@
             <h1>Emoji Tetris</h1>
             <div class="tetris-preview">🧱</div>
             <p>Stack emoji blocks and clear lines!</p>
-            <p class="hint">Score a Tetris (4 lines) to flip into Brick Breaker!</p>
+            <p class="hint">Score a Tetris (or clear 10 lines) to flip into Brick Breaker. Catch power-ups there to bank perks for your next Tetris round!</p>
+            <div class="controls">
+                <p><b>Drag</b> move · <b>Tap</b> rotate (left ↺ / right ↻)</p>
+                <p><b>Drag down</b> soft drop · <b>Flick down</b> hard drop</p>
+                <p><b>Swipe up</b> or tap <b>HOLD</b> to hold</p>
+                <p class="keys">Keys: ←→ move · ↑/X ↻ · Z ↺ · ↓ soft · Space hard · C hold · P pause</p>
+            </div>
             <button id="start-btn" class="game-btn">START GAME</button>
         </div>
 
@@ -26,8 +32,9 @@
         <div id="gameover-screen" class="screen hidden">
             <h1>GAME OVER</h1>
             <p>Final Score: <span id="final-score">0</span></p>
+            <p id="new-best" class="new-best hidden">NEW BEST!</p>
             <p>Best: <span id="high-score">0</span></p>
-            <p>Round: <span id="final-round">1</span></p>
+            <p>Round: <span id="final-round">1</span> · Lines: <span id="final-lines">0</span> · Tetrises: <span id="final-tetrises">0</span></p>
             <button id="restart-btn" class="game-btn">PLAY AGAIN</button>
             <a href="index.html" class="back-link">&larr; Back to Menu</a>
         </div>
@@ -39,11 +46,8 @@
             <div id="level-display">Lv 1</div>
         </div>
 
-        <!-- Next piece preview -->
-        <div id="next-piece" class="hidden">
-            <div class="next-label">NEXT</div>
-            <canvas id="nextCanvas" width="100" height="100"></canvas>
-        </div>
+        <!-- Pause -->
+        <button id="pause-btn" class="hidden" aria-label="Pause">⏸</button>
 
         <!-- Lines / Bricks info -->
         <div id="info-display" class="hidden">
