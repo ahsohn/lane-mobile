@@ -100,12 +100,22 @@ lane-mobile/
 - Hybrid Tetris / Brick Breaker game
 - Tetris side: standard 10x20 grid with emoji blocks (7 tetrominoes)
 - Each piece type uses a different emoji: I=🟦, O=🟨, T=🟪, S=🟩, Z=🟥, J=🔵, L=🟧
-- SRS rotation with wall kicks, ghost piece, next piece preview
-- Score a Tetris (4 lines cleared at once) to flip into Brick Breaker mode
-- Flip transition: 3D flip animation, each Tetris block becomes 2x2 bricks
-- Brick Breaker side: paddle + ball, destroy all bricks to flip back to Tetris
-- Power-ups in bricks: Multi-ball (⚡), Wide Paddle (↔️), Fireball (🔥), Slow Ball (🐢), Score Bonus (💎), Sticky Paddle (🧲)
-- Controls: Swipe/tap on mobile; Arrow keys / WASD + Space on desktop
+- Proper SRS rotation (CW + CCW) with wall kicks, 7-bag randomizer, hold slot, 3-piece next queue, ghost piece
+- Lock delay with limited move resets; danger pulse when the stack nears the top
+- Scoring: line clears, T-Spins (3-corner rule), back-to-back ×1.5, combos, perfect clear (all × level)
+- Flip to Brick Breaker on a Tetris, a T-Spin Double/Triple, or every 10 lines
+- Flip transition: 3D flip animation, each Tetris block becomes 2x2 bricks, then morphs into the breaker layout
+- Brick Breaker side: paddle + ball, 30s timer (+0.3s per brick); ends on time up, ball lost, or board clear
+- A Tetris cell returns only if 2+ of its 4 bricks survive (cracked/dimmed visuals show this); columns then settle
+- "Your Board" mini-map previews the returning board; rows that come back full clear as a CASCADE bonus (never chains a flip)
+- Brick combo multiplier (bricks without touching paddle), brick score scales with level, ball speeds up each round
+- Power-ups (10% per Tetris cell): Multi-ball (⚡), Wide Paddle (↔️), Fireball (🔥), Slow Ball (🐢), Score Bonus (💎), Sticky Paddle (🧲)
+- Each power-up caught also banks a Tetris perk: ⚡ I-piece next, ↔️ breaker bar head start, 🔥 burn bottom row,
+  🐢 slow drop (10 pieces), 💎 2× score (30s), 🧲 long lock delay (10 pieces)
+- Controls (mobile): drag to move, tap left/right half to rotate CCW/CW, drag down soft drop, flick down hard drop,
+  swipe up or tap HOLD to hold; pause button bottom-right (auto-pauses when the app is backgrounded)
+- Controls (desktop): ←→/A,D move, ↑/W/X rotate CW, Z/Q rotate CCW, ↓/S soft drop, Space hard drop, C/Shift hold, P/Esc pause
+- All timers are dt-based so the game behaves the same at 60Hz and 120Hz
 - Game over only on Tetris side (blocks reach top)
 - High scores saved to localStorage (`emojiTetrisHighScore`)
 
